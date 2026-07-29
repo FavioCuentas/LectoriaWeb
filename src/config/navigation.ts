@@ -1,0 +1,33 @@
+import {
+  Home,
+  Users,
+  BarChart3,
+  FileText,
+  BookOpen,
+  Wrench,
+  Sparkles,
+  CreditCard,
+  AlertTriangle,
+  Tag,
+  Bell,
+  Settings,
+  Shield,
+  Search,
+} from 'lucide-react';
+
+export const NAV_ITEMS = [
+  { id: 'resumen', label: 'Resumen', path: '/admin', icon: Home },
+  { id: 'usuarios', label: 'Usuarios', path: '/admin/usuarios', icon: Users },
+  { id: 'analitica', label: 'Analítica', path: '/admin/analitica', icon: BarChart3 },
+  { id: 'documentos', label: 'Documentos', path: '/admin/documentos', icon: FileText },
+  { id: 'lectura', label: 'Lectura', path: '/admin/lectura', icon: BookOpen },
+  { id: 'herramientas', label: 'Herramientas educativas', path: '/admin/herramientas', icon: Wrench },
+  { id: 'ia', label: 'Inteligencia artificial', path: '/admin/ia', icon: Sparkles },
+  { id: 'suscripciones', label: 'Suscripciones', path: '/admin/suscripciones', icon: CreditCard },
+  { id: 'errores', label: 'Errores', path: '/admin/errores', icon: AlertTriangle },
+  { id: 'versiones', label: 'Versiones de la app', path: '/admin/versiones', icon: Tag },
+  { id: 'notificaciones', label: 'Notificaciones', path: '/admin/notificaciones', icon: Bell },
+  { id: 'configuracion', label: 'Configuración', path: '/admin/configuracion', icon: Settings },
+  { id: 'roles', label: 'Roles y permisos', path: '/admin/roles', icon: Shield },
+  { id: 'auditoria', label: 'Auditoría', path: '/admin/auditoria', icon: Search },
+];

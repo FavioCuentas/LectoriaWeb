@@ -1,0 +1,64 @@
+# PROYECTO: LANDING PAGE OFICIAL DE LECTORIA
+
+Actúa como arquitecto frontend senior, diseñador de producto digital y especialista en implementación pixel-perfect de interfaces web.
+
+Debes desarrollar la landing page pública y oficial de **Lectoria**, una aplicación de lectura para iPhone orientada especialmente a estudiantes y personas que necesitan leer, estudiar, organizar y consultar documentos digitales.
+
+He adjuntado un archivo `.zip` que contiene varios diseños y archivos exportados desde Claude Design.
+
+## REGLA PRINCIPAL DE ALCANCE
+
+En esta etapa debes trabajar exclusivamente con el diseño, carpeta, archivo, página o componente identificado con el nombre:
+
+- `landing`
+- `Landing`
+- `landing-page`
+- `home`
+- o una denominación inequívocamente asociada a la página pública de Lectoria.
+
+No debes desarrollar en este proyecto:
+
+- Login.
+- Registro.
+- Recuperación de contraseña.
+- Dashboard administrativo.
+- Panel de analítica.
+- Gestión de usuarios.
+- Autenticación con Supabase.
+- APIs privadas.
+- Base de datos.
+- Funciones administrativas.
+- Aplicación web autenticada.
+
+El login y el dashboard se desarrollarán en otro proyecto independiente.
+
+La landing únicamente podrá incluir enlaces externos o configurables hacia el futuro login y hacia la App Store, pero no debe implementar esas pantallas.
+
+---
+
+# 1. INSPECCIÓN OBLIGATORIA DEL ZIP
+
+Antes de escribir o modificar código:
+
+1. Descomprime e inspecciona todo el contenido del ZIP.
+2. Identifica:
+   - Framework utilizado.
+   - Archivos HTML.
+   - Archivos CSS.
+   - Archivos JavaScript o TypeScript.
+   - Imágenes.
+   - Logotipos.
+   - Tipografías.
+   - Iconos.
+   - Mockups.
+   - Animaciones.
+   - Videos.
+   - Componentes reutilizables.
+   - Páginas adicionales.
+3. Determina exactamente qué archivos corresponden a la landing.
+4. Ignora los diseños de login, dashboard o administración.
+5. No elimines ni sobrescribas los archivos originales del ZIP.
+6. Guarda el material original dentro de una carpeta de referencia, por ejemplo:
+
+```text
+/design-reference
