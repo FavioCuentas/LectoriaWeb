@@ -1,383 +1,236 @@
 import React from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { DateRange, StatMetric } from '../../types/dashboard';
+import { AlertCircle, Database, RefreshCw } from 'lucide-react';
 import {
-  AreaChart,
   Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell,
-  PieChart,
-  Pie,
 } from 'recharts';
+import type { AdminOutletContext, StatMetric } from '../../types/dashboard';
+import { PLAN_LABELS } from '../../config/plans';
+
+const numberFormatter = new Intl.NumberFormat('es-ES');
+const currencyFormatter = new Intl.NumberFormat('es-ES', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
+const chartColors = ['#c67139', '#7a8a5e', '#d67f48', '#56633f', '#f6a06b', '#8fa073'];
+
+const EmptyChart: React.FC = () => (
+  <div style={{ minHeight: '190px', display: 'grid', placeContent: 'center', color: 'var(--color-neutral-600)', fontSize: '13px' }}>
+    Sin eventos para el periodo seleccionado.
+  </div>
+);
+
+const ChartCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <section className="card elev-sm" style={{ padding: '22px', background: 'var(--color-bg)', border: '1px solid var(--color-divider)' }}>
+    <h3 style={{ fontSize: '15px', margin: '0 0 14px' }}>{title}</h3>
+    {children}
+  </section>
+);
 
 export const OverviewTab: React.FC = () => {
-  const { dateRange } = useOutletContext<{ dateRange: DateRange }>();
+  const { dateRange, dashboard, dashboardLoading, dashboardError, reloadDashboard } =
+    useOutletContext<AdminOutletContext>();
 
-  // Scale metrics according to selected date range
-  const scale = dateRange === '7d' ? 0.5 : dateRange === '30d' ? 1 : 2.1;
+  if (dashboardLoading) {
+    return (
+      <div role="status" className="card elev-sm" style={{ padding: '36px', alignItems: 'center', textAlign: 'center' }}>
+        <Database size={30} color="var(--color-accent-700)" />
+        <h2 style={{ fontSize: '18px', margin: 0 }}>Cargando métricas reales</h2>
+        <p style={{ margin: 0, color: 'var(--color-neutral-700)' }}>Consultando el resumen administrativo en Supabase…</p>
+      </div>
+    );
+  }
 
+  if (dashboardError || !dashboard) {
+    return (
+      <div role="alert" className="card elev-sm" style={{ padding: '36px', alignItems: 'center', textAlign: 'center' }}>
+        <AlertCircle size={32} color="var(--color-accent-700)" />
+        <h2 style={{ fontSize: '18px', margin: 0 }}>No se pudieron mostrar las métricas</h2>
+        <p style={{ maxWidth: '62ch', margin: 0, color: 'var(--color-neutral-700)' }}>
+          {dashboardError ?? 'El dashboard no recibió datos.'} No se muestran cifras inventadas como reemplazo.
+        </p>
+        <button type="button" className="btn btn-primary" onClick={reloadDashboard}>
+          <RefreshCw size={16} /> Reintentar
+        </button>
+      </div>
+    );
+  }
+
+  const { kpis } = dashboard;
+  const planChartData = dashboard.planDistribution.map((item) => ({
+    ...item,
+    label: PLAN_LABELS[item.plan],
+  }));
   const stats: StatMetric[] = [
-    { id: '1', label: 'Usuarios registrados', value: Math.round(4820 * scale).toLocaleString('es-ES'), delta: '+ frente al periodo anterior', deltaType: 'positive', category: 'users' },
-    { id: '2', label: 'Usuarios activos diarios', value: Math.round(612 * scale).toLocaleString('es-ES'), delta: '+ frente al periodo anterior', deltaType: 'positive', category: 'users' },
-    { id: '3', label: 'Usuarios activos semanales', value: Math.round(1940 * scale).toLocaleString('es-ES'), delta: '+ frente al periodo anterior', deltaType: 'positive', category: 'users' },
-    { id: '4', label: 'Usuarios activos mensuales', value: Math.round(3510 * scale).toLocaleString('es-ES'), delta: '+ frente al periodo anterior', deltaType: 'positive', category: 'users' },
-    { id: '5', label: 'Nuevos usuarios', value: Math.round(284 * scale).toLocaleString('es-ES'), delta: '+ frente al periodo anterior', deltaType: 'positive', category: 'users' },
-    { id: '6', label: 'Usuarios gratuitos', value: Math.round(4110 * scale).toLocaleString('es-ES'), delta: 'sin cambios relevantes', deltaType: 'neutral', category: 'users' },
-    { id: '7', label: 'Usuarios de pago', value: Math.round(710 * scale).toLocaleString('es-ES'), delta: '+ frente al periodo anterior', deltaType: 'positive', category: 'financial' },
-    { id: '8', label: 'Conversión a pago', value: '14,7%', delta: 'estable', deltaType: 'neutral', category: 'financial' },
-    { id: '9', label: 'Cancelaciones', value: Math.round(38 * scale).toLocaleString('es-ES'), delta: '− frente al periodo anterior', deltaType: 'negative', category: 'financial' },
-    { id: '10', label: 'Documentos importados', value: Math.round(9840 * scale).toLocaleString('es-ES'), delta: '+ frente al periodo anterior', deltaType: 'positive', category: 'usage' },
-    { id: '11', label: 'Sesiones de lectura', value: Math.round(15200 * scale).toLocaleString('es-ES'), delta: '+ frente al periodo anterior', deltaType: 'positive', category: 'usage' },
-    { id: '12', label: 'Tiempo promedio de lectura', value: '24 min', delta: 'estable', deltaType: 'neutral', category: 'usage' },
-    { id: '13', label: 'Uso de diccionario', value: Math.round(6210 * scale).toLocaleString('es-ES'), delta: '+ frente al periodo anterior', deltaType: 'positive', category: 'usage' },
-    { id: '14', label: 'Uso de traducción', value: Math.round(4030 * scale).toLocaleString('es-ES'), delta: '+ frente al periodo anterior', deltaType: 'positive', category: 'usage' },
-    { id: '15', label: 'Uso de IA', value: Math.round(7460 * scale).toLocaleString('es-ES'), delta: '+ frente al periodo anterior', deltaType: 'positive', category: 'usage' },
-    { id: '16', label: 'Uso de texto a voz', value: Math.round(1180 * scale).toLocaleString('es-ES'), delta: '+ frente al periodo anterior', deltaType: 'positive', category: 'usage' },
-    { id: '17', label: 'Errores técnicos', value: Math.round(23 * scale).toLocaleString('es-ES'), delta: '− frente al periodo anterior', deltaType: 'negative', category: 'technical' },
-    { id: '18', label: 'Versión más utilizada', value: '2.4.1', delta: '62% de los dispositivos', deltaType: 'neutral', category: 'technical' },
-  ];
-
-  // Recharts user growth data
-  const userEvolutionData = [
-    { day: 'Día 1', usuarios: Math.round(420 * scale) },
-    { day: 'Día 3', usuarios: Math.round(480 * scale) },
-    { day: 'Día 6', usuarios: Math.round(450 * scale) },
-    { day: 'Día 9', usuarios: Math.round(590 * scale) },
-    { day: 'Día 12', usuarios: Math.round(630 * scale) },
-    { day: 'Día 15', usuarios: Math.round(610 * scale) },
-    { day: 'Día 18', usuarios: Math.round(700 * scale) },
-    { day: 'Día 21', usuarios: Math.round(750 * scale) },
-    { day: 'Día 24', usuarios: Math.round(720 * scale) },
-    { day: 'Día 27', usuarios: Math.round(820 * scale) },
-    { day: 'Día 30', usuarios: Math.round(890 * scale) },
-  ];
-
-  // Format usage chart data
-  const formatUsageData = [
-    { name: 'PDF', pct: 42, color: '#c67139' },
-    { name: 'EPUB', pct: 31, color: '#d67f48' },
-    { name: 'PPTX', pct: 14, color: '#f6a06b' },
-    { name: 'Texto pegado', pct: 8, color: '#7a8a5e' },
-    { name: 'Markdown', pct: 3, color: '#8fa073' },
-    { name: 'TXT', pct: 2, color: '#aebf92' },
-  ];
-
-  // Feature usage data
-  const featureUsageData = [
-    { name: 'Diccionario', pct: 68, color: '#7a8a5e' },
-    { name: 'IA / explicar', pct: 54, color: '#c67139' },
-    { name: 'Traducción', pct: 47, color: '#d67f48' },
-    { name: 'Resaltados', pct: 39, color: '#8fa073' },
-    { name: 'Texto a voz', pct: 21, color: '#f6a06b' },
-  ];
-
-  // Conversion funnel
-  const funnelData = [
-    { stage: 'Registro', pct: 100, width: '100%' },
-    { stage: 'Primera lectura', pct: 71, width: '71%' },
-    { stage: 'Conversión a pago', pct: 15, width: '15%' },
-  ];
-
-  // iOS Version Distribution
-  const iosDistData = [
-    { name: 'iOS 18', value: 58, color: '#2e2b25' },
-    { name: 'iOS 17', value: 31, color: '#645c50' },
-    { name: 'iOS 16', value: 8, color: '#a19786' },
-    { name: 'Otras', value: 3, color: '#dcd3c4' },
+    { id: 'users', label: 'Usuarios registrados', value: numberFormatter.format(kpis.usersRegistered), delta: 'Total acumulado', deltaType: 'neutral', category: 'users' },
+    { id: 'dau', label: 'Usuarios activos diarios', value: numberFormatter.format(kpis.dailyActiveUsers), delta: 'DAU de las últimas 24 horas', deltaType: 'neutral', category: 'users' },
+    { id: 'wau', label: 'Usuarios activos semanales', value: numberFormatter.format(kpis.weeklyActiveUsers), delta: 'WAU de los últimos 7 días', deltaType: 'neutral', category: 'users' },
+    { id: 'mau', label: 'Usuarios activos mensuales', value: numberFormatter.format(kpis.monthlyActiveUsers), delta: 'MAU de los últimos 30 días', deltaType: 'neutral', category: 'users' },
+    { id: 'new-users', label: 'Nuevos usuarios', value: numberFormatter.format(kpis.newUsers), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'users' },
+    { id: 'free', label: 'Plan Free', value: numberFormatter.format(kpis.freeUsers), delta: 'USD 0', deltaType: 'neutral', category: 'financial' },
+    { id: 'annual', label: 'Plan Anual', value: numberFormatter.format(kpis.annualUsers), delta: 'USD 5 por año', deltaType: 'positive', category: 'financial' },
+    { id: 'lifetime', label: 'Plan De por vida', value: numberFormatter.format(kpis.lifetimeUsers), delta: 'USD 20 pago único', deltaType: 'positive', category: 'financial' },
+    { id: 'paying', label: 'Usuarios de pago', value: numberFormatter.format(kpis.payingUsers), delta: 'Anual + De por vida', deltaType: 'positive', category: 'financial' },
+    { id: 'conversion', label: 'Conversión a pago', value: `${kpis.paymentConversionPct.toLocaleString('es-ES')}%`, delta: 'Usuarios de pago / registrados', deltaType: 'neutral', category: 'financial' },
+    { id: 'revenue', label: 'Ingresos brutos', value: currencyFormatter.format(kpis.grossRevenueCents / 100), delta: `Transacciones de ${dashboard.rangeDays} días`, deltaType: 'positive', category: 'financial' },
+    { id: 'cancellations', label: 'Cancelaciones', value: numberFormatter.format(kpis.cancellations), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'negative', category: 'financial' },
+    { id: 'documents', label: 'Documentos importados', value: numberFormatter.format(kpis.documentsImported), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'usage' },
+    { id: 'reading', label: 'Sesiones de lectura', value: numberFormatter.format(kpis.readingSessions), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'usage' },
+    { id: 'reading-time', label: 'Tiempo promedio de lectura', value: `${kpis.avgReadingMinutes.toLocaleString('es-ES')} min`, delta: 'Por sesión finalizada', deltaType: 'neutral', category: 'usage' },
+    { id: 'dictionary', label: 'Uso de diccionario', value: numberFormatter.format(kpis.dictionaryUses), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'usage' },
+    { id: 'translation', label: 'Uso de traducción', value: numberFormatter.format(kpis.translationUses), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'usage' },
+    { id: 'ai', label: 'Uso de IA', value: numberFormatter.format(kpis.aiUses), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'usage' },
+    { id: 'tts', label: 'Uso de texto a voz', value: numberFormatter.format(kpis.textToSpeechUses), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'usage' },
+    { id: 'errors', label: 'Errores técnicos', value: numberFormatter.format(kpis.technicalErrors), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'negative', category: 'technical' },
+    { id: 'version', label: 'Versión más utilizada', value: kpis.topAppVersion ?? 'Sin datos', delta: kpis.topAppVersion ? `${kpis.topAppVersionPct.toLocaleString('es-ES')}% de dispositivos` : 'Aún sin telemetría', deltaType: 'neutral', category: 'technical' },
   ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-      {/* 18 STAT CARDS GRID */}
-      <div>
+      <section>
         <h2 style={{ fontSize: '16px', marginBottom: '14px', color: 'var(--color-neutral-800)' }}>
-          Métricas clave del periodo ({dateRange === '7d' ? 'Últimos 7 días' : dateRange === '30d' ? 'Últimos 30 días' : 'Últimos 90 días'})
+          Métricas clave ({dateRange === '7d' ? 'últimos 7 días' : dateRange === '30d' ? 'últimos 30 días' : 'últimos 90 días'})
         </h2>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '14px',
-          }}
-        >
-          {stats.map((st) => {
-            const isPos = st.deltaType === 'positive';
-            const isNeg = st.deltaType === 'negative';
-            const deltaColor = isPos
-              ? 'var(--color-accent-2-700)'
-              : isNeg
-              ? 'var(--color-accent-700)'
-              : 'color-mix(in srgb, var(--color-text) 55%, transparent)';
-
-            return (
-              <div
-                key={st.id}
-                style={{
-                  background: 'var(--color-bg)',
-                  padding: '16px',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--color-divider)',
-                  boxShadow: 'var(--shadow-sm)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px',
-                }}
-              >
-                <div style={{ fontSize: '12px', color: 'color-mix(in srgb, var(--color-text) 60%, transparent)', fontWeight: 500 }}>
-                  {st.label}
-                </div>
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: '24px', fontWeight: 600, color: 'var(--color-text)' }}>
-                  {st.value}
-                </div>
-                <div style={{ fontSize: '11px', color: deltaColor, fontWeight: 600 }}>
-                  {st.delta}
-                </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+          {stats.map((metric) => (
+            <article
+              key={metric.id}
+              className="card elev-sm"
+              style={{ padding: '16px', gap: '6px', background: 'var(--color-bg)', border: '1px solid var(--color-divider)' }}
+            >
+              <div style={{ fontSize: '12px', color: 'var(--color-neutral-700)', fontWeight: 500 }}>{metric.label}</div>
+              <div style={{ fontFamily: 'var(--font-heading)', fontSize: '24px' }}>{metric.value}</div>
+              <div style={{ fontSize: '11px', color: metric.deltaType === 'positive' ? 'var(--color-accent-2-700)' : metric.deltaType === 'negative' ? 'var(--color-accent-700)' : 'var(--color-neutral-600)' }}>
+                {metric.delta}
               </div>
-            );
-          })}
+            </article>
+          ))}
         </div>
-      </div>
+      </section>
 
-      {/* ROW 1: USER EVOLUTION CHART & FORMAT USAGE */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '18px' }}>
-        {/* User Evolution Line/Area Chart */}
-        <div
-          style={{
-            background: 'var(--color-bg)',
-            padding: '22px',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--color-divider)',
-            boxShadow: 'var(--shadow-sm)',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <h3 style={{ fontSize: '15px', margin: '0 0 14px', color: 'var(--color-text)' }}>
-            Evolución de usuarios activos
-          </h3>
-          <div style={{ width: '100%', height: '220px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={userEvolutionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-divider)" vertical={false} />
-                <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#645c50' }} />
-                <YAxis tick={{ fontSize: 11, fill: '#645c50' }} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--color-neutral-900)',
-                    color: '#fff',
-                    borderRadius: '8px',
-                    border: 'none',
-                    fontSize: '12px',
-                  }}
-                  formatter={(val: number) => [`${val.toLocaleString('es-ES')} usuarios`, 'Activos']}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="usuarios"
-                  stroke="var(--color-accent)"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorUsers)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(360px, 100%), 1fr))', gap: '18px' }}>
+        <ChartCard title="Evolución de usuarios activos">
+          {dashboard.activeUsers.length === 0 ? <EmptyChart /> : (
+            <div style={{ width: '100%', height: '220px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={dashboard.activeUsers} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-divider)" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#645c50' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#645c50' }} allowDecimals={false} />
+                  <Tooltip formatter={(value: number) => [numberFormatter.format(value), 'Usuarios activos']} />
+                  <Area type="monotone" dataKey="users" stroke="var(--color-accent)" strokeWidth={3} fill="url(#colorUsers)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </ChartCard>
 
-        {/* Format Usage Bar Chart */}
-        <div
-          style={{
-            background: 'var(--color-bg)',
-            padding: '22px',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--color-divider)',
-            boxShadow: 'var(--shadow-sm)',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <h3 style={{ fontSize: '15px', margin: '0 0 14px', color: 'var(--color-text)' }}>
-            Formatos más utilizados
-          </h3>
-          <div style={{ width: '100%', height: '220px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={formatUsageData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-divider)" />
-                <XAxis type="number" unit="%" tick={{ fontSize: 11, fill: '#645c50' }} />
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: '#201e1d' }} width={85} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--color-neutral-900)',
-                    color: '#fff',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
-                  formatter={(val: number) => [`${val}%`, 'Uso']}
-                />
-                <Bar dataKey="pct" radius={[0, 6, 6, 0]}>
-                  {formatUsageData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+        <ChartCard title="Formatos más utilizados">
+          {dashboard.formatUsage.length === 0 ? <EmptyChart /> : (
+            <div style={{ width: '100%', height: '220px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dashboard.formatUsage} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-divider)" />
+                  <XAxis type="number" allowDecimals={false} />
+                  <YAxis dataKey="name" type="category" width={90} tick={{ fontSize: 12 }} />
+                  <Tooltip formatter={(value: number) => [numberFormatter.format(value), 'Importaciones']} />
+                  <Bar dataKey="count" radius={[0, 6, 6, 0]}>
+                    {dashboard.formatUsage.map((item, index) => <Cell key={item.name} fill={chartColors[index % chartColors.length]} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </ChartCard>
+
+        <ChartCard title="Funciones más utilizadas">
+          {dashboard.featureUsage.length === 0 ? <EmptyChart /> : (
+            <div style={{ width: '100%', height: '220px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dashboard.featureUsage} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-divider)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip formatter={(value: number) => [numberFormatter.format(value), 'Usos']} />
+                  <Bar dataKey="count" fill="var(--color-accent-2-500)" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </ChartCard>
+
+        <ChartCard title="Conversión: registro → primera lectura → pago">
+          {dashboard.funnel.length === 0 ? <EmptyChart /> : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingTop: '8px' }}>
+              {dashboard.funnel.map((step) => (
+                <div key={step.stage}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', marginBottom: '4px' }}>
+                    <span>{step.stage}</span>
+                    <span>{numberFormatter.format(step.count)} · {step.pct.toLocaleString('es-ES')}%</span>
+                  </div>
+                  <div style={{ height: '28px', borderRadius: '8px', background: 'var(--color-neutral-200)' }}>
+                    <div style={{ width: `${Math.max(step.pct, step.count > 0 ? 2 : 0)}%`, height: '100%', borderRadius: '8px', background: 'var(--color-accent-500)' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </ChartCard>
+
+        <ChartCard title="Planes de Lectoria">
+          {dashboard.planDistribution.length === 0 ? <EmptyChart /> : (
+            <div style={{ width: '100%', height: '220px', display: 'flex', alignItems: 'center' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={planChartData} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={45} outerRadius={78} label={(entry) => `${String(entry.label)} · ${Number(entry.pct).toLocaleString('es-ES')}%`}>
+                    {planChartData.map((item, index) => <Cell key={item.plan} fill={chartColors[index % chartColors.length]} />)}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => [numberFormatter.format(value), 'Usuarios']} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </ChartCard>
+
+        <ChartCard title="Versiones por plataforma">
+          {dashboard.platformVersions.length === 0 ? <EmptyChart /> : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table" style={{ width: '100%' }}>
+                <thead><tr><th>Plataforma</th><th>Versión</th><th>Dispositivos</th><th>%</th></tr></thead>
+                <tbody>
+                  {dashboard.platformVersions.map((item) => (
+                    <tr key={`${item.platform}-${item.version}`}>
+                      <td>{item.platform === 'ios' ? 'iOS' : item.platform === 'android' ? 'Android' : 'Otra'}</td>
+                      <td>{item.version}</td>
+                      <td>{numberFormatter.format(item.devices)}</td>
+                      <td>{item.pct.toLocaleString('es-ES')}%</td>
+                    </tr>
                   ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* ROW 2: FEATURE USAGE, FUNNEL, AND IOS DISTRIBUTION */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '18px' }}>
-        {/* Feature Usage */}
-        <div
-          style={{
-            background: 'var(--color-bg)',
-            padding: '22px',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--color-divider)',
-            boxShadow: 'var(--shadow-sm)',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <h3 style={{ fontSize: '15px', margin: '0 0 14px', color: 'var(--color-text)' }}>
-            Funciones más utilizadas
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {featureUsageData.map((f) => (
-              <div key={f.name}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', marginBottom: '4px' }}>
-                  <span style={{ fontWeight: 500 }}>{f.name}</span>
-                  <span style={{ opacity: 0.7, fontWeight: 600 }}>{f.pct}%</span>
-                </div>
-                <div style={{ height: '8px', borderRadius: '999px', background: 'var(--color-neutral-200)' }}>
-                  <div
-                    style={{
-                      width: `${f.pct}%`,
-                      height: '100%',
-                      borderRadius: '999px',
-                      background: f.color,
-                      transition: 'width 0.4s ease',
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Conversion Funnel */}
-        <div
-          style={{
-            background: 'var(--color-bg)',
-            padding: '22px',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--color-divider)',
-            boxShadow: 'var(--shadow-sm)',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <h3 style={{ fontSize: '15px', margin: '0 0 14px', color: 'var(--color-text)' }}>
-            Conversión: registro → primera lectura → pago
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '6px' }}>
-            {funnelData.map((fn) => (
-              <div key={fn.stage} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div
-                  style={{
-                    width: fn.width,
-                    height: '34px',
-                    background: 'var(--color-accent-500)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'flex-end',
-                    paddingRight: '10px',
-                    color: '#fff',
-                    fontSize: '12px',
-                    fontFamily: 'var(--font-heading)',
-                    fontWeight: 600,
-                  }}
-                >
-                  {fn.pct}%
-                </div>
-                <span style={{ fontSize: '12.5px', color: 'var(--color-text)', whiteSpace: 'nowrap', fontWeight: 500 }}>
-                  {fn.stage}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* iOS Distribution */}
-        <div
-          style={{
-            background: 'var(--color-bg)',
-            padding: '22px',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--color-divider)',
-            boxShadow: 'var(--shadow-sm)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
-          <h3 style={{ fontSize: '15px', margin: '0 0 14px', color: 'var(--color-text)', width: '100%' }}>
-            Distribución por versión de iOS
-          </h3>
-          <div style={{ width: '100%', height: '160px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={iosDistData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={35}
-                  outerRadius={65}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {iosDistData.map((entry, index) => (
-                    <Cell key={`pie-cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--color-neutral-900)',
-                    color: '#fff',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
-                  formatter={(val: number) => [`${val}%`, 'Cuota']}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '6px' }}>
-            {iosDistData.map((item) => (
-              <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: item.color }} />
-                <span>
-                  {item.name}: <strong>{item.value}%</strong>
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+                </tbody>
+              </table>
+            </div>
+          )}
+        </ChartCard>
       </div>
     </div>
   );

@@ -17,9 +17,11 @@ export interface AuthContextType {
   initializing: boolean;
   loading: boolean;
   error: string | null;
-  magicLinkSent: boolean;
-  signInWithMagicLink: (email: string) => Promise<boolean>;
+  otpRequested: boolean;
+  pendingEmail: string | null;
+  requestOtp: (email: string) => Promise<boolean>;
+  verifyOtp: (token: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  resetMagicLink: () => void;
+  resetOtp: () => void;
   setError: (error: string | null) => void;
 }

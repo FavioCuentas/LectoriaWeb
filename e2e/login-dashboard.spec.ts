@@ -26,12 +26,13 @@ test.describe('Lectoria Supabase authentication boundary', () => {
     await expect(page.getByText('Datos de demostración')).not.toBeVisible();
   });
 
-  test('exposes Magic Link instead of the removed password and simulated 2FA flow', async ({ page }) => {
+  test('exposes numeric OTP instead of password, Magic Link, or simulated 2FA', async ({ page }) => {
     await page.goto('/login');
 
     await expect(page.getByLabel('Correo')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Enviar enlace de acceso/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Enviar código de acceso/i })).toBeVisible();
     await expect(page.getByLabel('Contraseña')).toHaveCount(0);
+    await expect(page.getByText(/Magic Link/i)).toHaveCount(0);
     await expect(page.locator('#admin-code')).toHaveCount(0);
   });
 });

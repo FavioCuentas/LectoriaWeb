@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { AuthProvider, useAuth } from '../context/AuthContext';
+import { AuthProvider } from '../context/AuthContext';
+import { useAuth } from '../context/auth-context';
 import { createMockSession, createSupabaseMock } from '../test/supabaseMock';
 
 const AuthProbe = () => {

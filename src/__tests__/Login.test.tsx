@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
 import { Login } from '../pages/Login';
-import { createSupabaseMock } from '../test/supabaseMock';
+import { createMockSession, createSupabaseMock } from '../test/supabaseMock';
 
 const renderLogin = () => {
   const mock = createSupabaseMock();
@@ -20,47 +20,60 @@ const renderLogin = () => {
   return mock;
 };
 
-describe('Magic Link login', () => {
-  it('renders an email-only access form without simulated credentials', async () => {
+describe('Inicio de sesión con OTP', () => {
+  it('muestra un formulario de correo sin contraseña ni Magic Link', async () => {
     renderLogin();
 
-    expect(await screen.findByRole('button', { name: /Enviar enlace de acceso/i })).toBeEnabled();
+    expect(await screen.findByRole('button', { name: /Enviar código de acceso/i })).toBeEnabled();
     expect(screen.getByLabelText('Correo')).toBeInTheDocument();
     expect(screen.queryByLabelText('Contraseña')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Magic Link/i)).not.toBeInTheDocument();
   });
 
-  it('requests a Magic Link without creating public users', async () => {
+  it('solicita un OTP sin crear usuarios públicos', async () => {
     const { auth } = renderLogin();
 
-    fireEvent.change(screen.getByLabelText('Correo'), {
-      target: { value: 'Admin@Lectoria.App' },
-    });
-    fireEvent.click(await screen.findByRole('button', { name: /Enviar enlace de acceso/i }));
+    fireEvent.change(screen.getByLabelText('Correo'), { target: { value: 'Admin@Lectoria.App' } });
+    fireEvent.click(await screen.findByRole('button', { name: /Enviar código de acceso/i }));
 
-    expect(await screen.findByRole('heading', { name: 'Revisa tu correo' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Verifica tu código' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Código de acceso')).toBeInTheDocument();
     expect(auth.signInWithOtp).toHaveBeenCalledWith({
       email: 'admin@lectoria.app',
-      options: {
-        emailRedirectTo: expect.stringMatching(/\/admin$/),
-        shouldCreateUser: false,
-      },
+      options: { shouldCreateUser: false },
     });
   });
 
-  it('shows a clear rate-limit error from Supabase', async () => {
+  it('verifica el código de seis dígitos y crea una sesión Supabase', async () => {
+    const { auth } = renderLogin();
+    const session = createMockSession();
+    auth.verifyOtp.mockResolvedValueOnce({ data: { user: session.user, session }, error: null });
+
+    fireEvent.change(screen.getByLabelText('Correo'), { target: { value: 'admin@lectoria.app' } });
+    fireEvent.click(await screen.findByRole('button', { name: /Enviar código de acceso/i }));
+    fireEvent.change(await screen.findByLabelText('Código de acceso'), { target: { value: '123456' } });
+    fireEvent.click(screen.getByRole('button', { name: /Verificar y entrar/i }));
+
+    await waitFor(() => {
+      expect(auth.verifyOtp).toHaveBeenCalledWith({
+        email: 'admin@lectoria.app',
+        token: '123456',
+        type: 'email',
+      });
+    });
+    expect(await screen.findByText('Dashboard Admin')).toBeInTheDocument();
+  });
+
+  it('muestra un error claro cuando Supabase limita solicitudes', async () => {
     const { auth } = renderLogin();
     auth.signInWithOtp.mockResolvedValueOnce({
       data: { user: null, session: null },
       error: { name: 'AuthApiError', message: 'rate limit', status: 429 },
     });
 
-    fireEvent.change(screen.getByLabelText('Correo'), {
-      target: { value: 'admin@lectoria.app' },
-    });
-    fireEvent.click(await screen.findByRole('button', { name: /Enviar enlace de acceso/i }));
+    fireEvent.change(screen.getByLabelText('Correo'), { target: { value: 'admin@lectoria.app' } });
+    fireEvent.click(await screen.findByRole('button', { name: /Enviar código de acceso/i }));
 
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(/demasiados intentos/i);
-    });
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/demasiados intentos/i));
   });
 });

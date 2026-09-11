@@ -1,9 +1,8 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { AuthError, Session, SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import type { AuthContextType, AuthUser, UserRole } from '../types/auth';
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import type { AuthUser, UserRole } from '../types/auth';
+import { AuthContext } from './auth-context';
 
 const supportedRoles: UserRole[] = ['student', 'teacher', 'researcher', 'staff', 'admin'];
 
@@ -39,12 +38,16 @@ const toAuthUser = (session: Session | null): AuthUser | null => {
   };
 };
 
-const getErrorMessage = (authError: AuthError): string => {
+const getErrorMessage = (authError: AuthError, action: 'request' | 'verify'): string => {
   if (authError.status === 429) {
     return 'Se realizaron demasiados intentos. Espera unos minutos antes de volver a intentarlo.';
   }
 
-  return 'No pudimos enviar el enlace de acceso. Verifica el correo o inténtalo nuevamente.';
+  if (action === 'verify') {
+    return 'El código es inválido o venció. Solicita uno nuevo e inténtalo nuevamente.';
+  }
+
+  return 'No pudimos enviar el código de acceso. Verifica el correo o inténtalo nuevamente.';
 };
 
 interface AuthProviderProps {
@@ -58,7 +61,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, client }) 
   const [initializing, setInitializing] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [otpRequested, setOtpRequested] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -75,7 +79,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, client }) 
       if (!active) return;
       setSession(nextSession);
       setInitializing(false);
-      if (nextSession) setMagicLinkSent(false);
+      if (nextSession) {
+        setOtpRequested(false);
+        setPendingEmail(null);
+      }
     });
 
     void authClient.auth.getSession().then(({ data, error: sessionError }) => {
@@ -96,20 +103,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, client }) 
     };
   }, [authClient]);
 
-  const signInWithMagicLink = async (email: string): Promise<boolean> => {
+  const requestOtp = async (email: string): Promise<boolean> => {
     if (!authClient) {
       setError('La autenticación no está configurada. Contacta al administrador de Lectoria.');
       return false;
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
     setLoading(true);
     setError(null);
-    setMagicLinkSent(false);
+    setOtpRequested(false);
 
     const { error: signInError } = await authClient.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       options: {
-        emailRedirectTo: `${window.location.origin}/admin`,
         shouldCreateUser: false,
       },
     });
@@ -117,11 +124,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, client }) 
     setLoading(false);
 
     if (signInError) {
-      setError(getErrorMessage(signInError));
+      setError(getErrorMessage(signInError, 'request'));
       return false;
     }
 
-    setMagicLinkSent(true);
+    setPendingEmail(normalizedEmail);
+    setOtpRequested(true);
+    return true;
+  };
+
+  const verifyOtp = async (token: string): Promise<boolean> => {
+    if (!authClient || !pendingEmail) {
+      setError('Solicita primero un código de acceso para tu correo.');
+      return false;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const { data, error: verifyError } = await authClient.auth.verifyOtp({
+      email: pendingEmail,
+      token: token.trim(),
+      type: 'email',
+    });
+
+    setLoading(false);
+
+    if (verifyError) {
+      setError(getErrorMessage(verifyError, 'verify'));
+      return false;
+    }
+
+    if (!data.session) {
+      setError('Supabase no devolvió una sesión válida. Solicita un código nuevo.');
+      return false;
+    }
+
+    setSession(data.session);
+    setOtpRequested(false);
+    setPendingEmail(null);
     return true;
   };
 
@@ -142,7 +183,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, client }) 
     }
 
     setSession(null);
-    setMagicLinkSent(false);
+    setOtpRequested(false);
+    setPendingEmail(null);
   };
 
   const user = useMemo(() => toAuthUser(session), [session]);
@@ -157,11 +199,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, client }) 
         initializing,
         loading,
         error,
-        magicLinkSent,
-        signInWithMagicLink,
+        otpRequested,
+        pendingEmail,
+        requestOtp,
+        verifyOtp,
         logout,
-        resetMagicLink: () => {
-          setMagicLinkSent(false);
+        resetOtp: () => {
+          setOtpRequested(false);
+          setPendingEmail(null);
           setError(null);
         },
         setError,
@@ -170,12 +215,4 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, client }) 
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };

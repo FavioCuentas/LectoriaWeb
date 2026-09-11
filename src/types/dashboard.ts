@@ -1,3 +1,5 @@
+import type { PlanCode } from '../config/plans';
+
 export type DateRange = '7d' | '30d' | '90d';
 
 export interface StatMetric {
@@ -12,21 +14,18 @@ export interface StatMetric {
 export interface UserActivePoint {
   date: string;
   users: number;
-  newUsers: number;
 }
 
 export interface FormatUsageItem {
-  format: string;
+  name: string;
   pct: number;
   count: number;
-  color: string;
 }
 
 export interface FeatureUsageItem {
-  feature: string;
+  name: string;
   pct: number;
-  usersCount: number;
-  color: string;
+  count: number;
 }
 
 export interface FunnelStep {
@@ -35,29 +34,60 @@ export interface FunnelStep {
   count: number;
 }
 
-export interface IosDistItem {
+export interface PlatformVersionItem {
+  platform: 'ios' | 'android' | 'other';
   version: string;
   pct: number;
   devices: number;
-  color: string;
 }
 
-export interface UserRecord {
-  id: string;
-  name: string;
-  email: string;
-  plan: 'Gratuito' | 'Premium';
-  registeredAt: string;
-  lastActive: string;
-  documentsCount: number;
-  status: 'Activo' | 'Inactivo' | 'Suspendido';
+export interface PlanDistributionItem {
+  plan: PlanCode;
+  count: number;
+  pct: number;
 }
 
-export interface AuditRecord {
-  id: string;
-  timestamp: string;
-  adminName: string;
-  action: string;
-  details: string;
-  ipAddress: string;
+export interface DashboardKpis {
+  usersRegistered: number;
+  dailyActiveUsers: number;
+  weeklyActiveUsers: number;
+  monthlyActiveUsers: number;
+  newUsers: number;
+  freeUsers: number;
+  annualUsers: number;
+  lifetimeUsers: number;
+  payingUsers: number;
+  paymentConversionPct: number;
+  cancellations: number;
+  grossRevenueCents: number;
+  documentsImported: number;
+  readingSessions: number;
+  avgReadingMinutes: number;
+  dictionaryUses: number;
+  translationUses: number;
+  aiUses: number;
+  textToSpeechUses: number;
+  technicalErrors: number;
+  topAppVersion: string | null;
+  topAppVersionPct: number;
+}
+
+export interface AdminDashboardData {
+  generatedAt: string;
+  rangeDays: number;
+  kpis: DashboardKpis;
+  activeUsers: UserActivePoint[];
+  formatUsage: FormatUsageItem[];
+  featureUsage: FeatureUsageItem[];
+  funnel: FunnelStep[];
+  platformVersions: PlatformVersionItem[];
+  planDistribution: PlanDistributionItem[];
+}
+
+export interface AdminOutletContext {
+  dateRange: DateRange;
+  dashboard: AdminDashboardData | null;
+  dashboardLoading: boolean;
+  dashboardError: string | null;
+  reloadDashboard: () => void;
 }
