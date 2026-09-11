@@ -1,93 +1,169 @@
-import React, { createContext, useContext, useState } from 'react';
-import { AdminUser, AuthStep, AuthContextType } from '../types/auth';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import type { AuthError, Session, SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
+import type { AuthContextType, AuthUser, UserRole } from '../types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_STORAGE_KEY = 'lectoria_admin_session';
+const supportedRoles: UserRole[] = ['student', 'teacher', 'researcher', 'staff', 'admin'];
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AdminUser | null>(() => {
-    const saved = localStorage.getItem(AUTH_STORAGE_KEY) || sessionStorage.getItem(AUTH_STORAGE_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
-  });
+const getRole = (session: Session): UserRole => {
+  const role = session.user.app_metadata?.role;
+  return supportedRoles.includes(role) ? role : 'student';
+};
 
-  const [step, setStep] = useState<AuthStep>('credentials');
+const getInitials = (name: string): string =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'LE';
+
+const toAuthUser = (session: Session | null): AuthUser | null => {
+  if (!session?.user) return null;
+
+  const email = session.user.email ?? '';
+  const name =
+    session.user.user_metadata?.full_name ??
+    session.user.user_metadata?.name ??
+    email.split('@')[0] ??
+    'Usuario Lectoria';
+
+  return {
+    id: session.user.id,
+    name,
+    email,
+    role: getRole(session),
+    avatarInitials: getInitials(name),
+  };
+};
+
+const getErrorMessage = (authError: AuthError): string => {
+  if (authError.status === 429) {
+    return 'Se realizaron demasiados intentos. Espera unos minutos antes de volver a intentarlo.';
+  }
+
+  return 'No pudimos enviar el enlace de acceso. Verifica el correo o inténtalo nuevamente.';
+};
+
+interface AuthProviderProps {
+  children: React.ReactNode;
+  client?: SupabaseClient | null;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children, client }) => {
+  const authClient = client === undefined ? supabase : client;
+  const [session, setSession] = useState<Session | null>(null);
+  const [initializing, setInitializing] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [remember, setRemember] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
-  const isAuthenticated = !!user;
+  useEffect(() => {
+    let active = true;
 
-  const toggleRemember = () => setRemember((prev) => !prev);
+    if (!authClient) {
+      setError('La autenticación no está configurada. Contacta al administrador de Lectoria.');
+      setInitializing(false);
+      return undefined;
+    }
 
-  const loginWithCredentials = async (email: string, password: string): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
+    const {
+      data: { subscription },
+    } = authClient.auth.onAuthStateChange((_event, nextSession) => {
+      if (!active) return;
+      setSession(nextSession);
+      setInitializing(false);
+      if (nextSession) setMagicLinkSent(false);
+    });
 
-    await new Promise((res) => setTimeout(res, 600));
+    void authClient.auth.getSession().then(({ data, error: sessionError }) => {
+      if (!active) return;
 
-    if (!email || !password) {
-      setError('Introduce tu correo y tu contraseña.');
-      setLoading(false);
+      if (sessionError) {
+        setError('No se pudo restaurar la sesión. Vuelve a iniciar sesión.');
+        setSession(null);
+      } else {
+        setSession(data.session);
+      }
+      setInitializing(false);
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [authClient]);
+
+  const signInWithMagicLink = async (email: string): Promise<boolean> => {
+    if (!authClient) {
+      setError('La autenticación no está configurada. Contacta al administrador de Lectoria.');
       return false;
     }
 
-    const authenticatedUser: AdminUser = {
-      id: 'admin-01',
-      name: 'Administrador Lectoria',
-      email: email.includes('@') ? email : 'admin@lectoria.app',
-      role: 'Administrador Principal',
-      avatarInitials: 'AD',
-    };
+    setLoading(true);
+    setError(null);
+    setMagicLinkSent(false);
 
-    setUser(authenticatedUser);
+    const { error: signInError } = await authClient.auth.signInWithOtp({
+      email: email.trim().toLowerCase(),
+      options: {
+        emailRedirectTo: `${window.location.origin}/admin`,
+        shouldCreateUser: false,
+      },
+    });
+
     setLoading(false);
-    setStep('success');
 
-    const storage = remember ? localStorage : sessionStorage;
-    storage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authenticatedUser));
+    if (signInError) {
+      setError(getErrorMessage(signInError));
+      return false;
+    }
 
+    setMagicLinkSent(true);
     return true;
   };
 
-  const verifyTwoFactor = async (_code: string): Promise<boolean> => {
-    return true;
+  const logout = async (): Promise<void> => {
+    if (!authClient) {
+      setSession(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    const { error: signOutError } = await authClient.auth.signOut();
+    setLoading(false);
+
+    if (signOutError) {
+      setError('No se pudo cerrar la sesión. Inténtalo nuevamente.');
+      return;
+    }
+
+    setSession(null);
+    setMagicLinkSent(false);
   };
 
-  const backToCredentials = () => {
-    setStep('credentials');
-    setError(null);
-  };
-
-  const logout = () => {
-    setUser(null);
-    setStep('credentials');
-    setError(null);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    sessionStorage.removeItem(AUTH_STORAGE_KEY);
-  };
+  const user = useMemo(() => toAuthUser(session), [session]);
+  const isAuthenticated = Boolean(session?.access_token && session.user);
 
   return (
     <AuthContext.Provider
       value={{
+        session,
         user,
         isAuthenticated,
-        step,
+        initializing,
         loading,
         error,
-        remember,
-        loginWithCredentials,
-        verifyTwoFactor,
-        backToCredentials,
-        toggleRemember,
+        magicLinkSent,
+        signInWithMagicLink,
         logout,
+        resetMagicLink: () => {
+          setMagicLinkSent(false);
+          setError(null);
+        },
         setError,
       }}
     >

@@ -1,24 +1,25 @@
-export interface AdminUser {
+import type { Session } from '@supabase/supabase-js';
+
+export type UserRole = 'student' | 'teacher' | 'researcher' | 'staff' | 'admin';
+
+export interface AuthUser {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: UserRole;
   avatarInitials: string;
 }
 
-export type AuthStep = 'credentials' | 'twofactor' | 'success';
-
 export interface AuthContextType {
-  user: AdminUser | null;
+  session: Session | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
-  step: AuthStep;
+  initializing: boolean;
   loading: boolean;
   error: string | null;
-  remember: boolean;
-  loginWithCredentials: (email: string, password: string) => Promise<boolean>;
-  verifyTwoFactor: (code: string) => Promise<boolean>;
-  backToCredentials: () => void;
-  toggleRemember: () => void;
-  logout: () => void;
+  magicLinkSent: boolean;
+  signInWithMagicLink: (email: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  resetMagicLink: () => void;
   setError: (error: string | null) => void;
 }

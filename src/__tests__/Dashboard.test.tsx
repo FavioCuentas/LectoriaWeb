@@ -4,23 +4,15 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { OverviewTab } from '../components/dashboard/OverviewTab';
+import { createMockSession, createSupabaseMock } from '../test/supabaseMock';
 
 describe('Admin Dashboard Component', () => {
-  it('renders header, sidebar nav items, and 18 stat KPI cards', () => {
-    localStorage.setItem(
-      'lectoria_admin_session',
-      JSON.stringify({
-        id: 'admin-01',
-        name: 'Administrador Lectoria',
-        email: 'admin@lectoria.app',
-        role: 'Administrador Principal',
-        avatarInitials: 'AD',
-      })
-    );
+  it('renders header, sidebar nav items, and 18 stat KPI cards', async () => {
+    const { client } = createSupabaseMock(createMockSession());
 
     render(
       <MemoryRouter initialEntries={['/admin']}>
-        <AuthProvider>
+        <AuthProvider client={client}>
           <Routes>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<OverviewTab />} />
@@ -30,6 +22,7 @@ describe('Admin Dashboard Component', () => {
       </MemoryRouter>
     );
 
+    expect(await screen.findByText('Administrador Lectoria')).toBeInTheDocument();
     expect(screen.getByText(/Lectoria Admin/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Resumen' })).toBeInTheDocument();
     expect(screen.getByText(/Datos de demostración/i)).toBeInTheDocument();
@@ -38,10 +31,12 @@ describe('Admin Dashboard Component', () => {
     expect(screen.getByRole('button', { name: /Descargar informe/i })).toBeInTheDocument();
   });
 
-  it('allows switching date ranges and updates metric scaling', () => {
+  it('allows switching date ranges and updates metric scaling', async () => {
+    const { client } = createSupabaseMock(createMockSession());
+
     render(
       <MemoryRouter initialEntries={['/admin']}>
-        <AuthProvider>
+        <AuthProvider client={client}>
           <Routes>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<OverviewTab />} />
@@ -51,6 +46,7 @@ describe('Admin Dashboard Component', () => {
       </MemoryRouter>
     );
 
+    expect(await screen.findByText('Administrador Lectoria')).toBeInTheDocument();
     const btn7d = screen.getByRole('button', { name: '7 días' });
     fireEvent.click(btn7d);
 

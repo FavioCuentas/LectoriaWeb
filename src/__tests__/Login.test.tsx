@@ -1,80 +1,66 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
 import { Login } from '../pages/Login';
+import { createSupabaseMock } from '../test/supabaseMock';
 
-describe('Login Flow Component', () => {
-  beforeEach(() => {
-    localStorage.clear();
-    sessionStorage.clear();
-  });
+const renderLogin = () => {
+  const mock = createSupabaseMock();
+  render(
+    <MemoryRouter initialEntries={['/login']}>
+      <AuthProvider client={mock.client}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<div>Dashboard Admin</div>} />
+        </Routes>
+      </AuthProvider>
+    </MemoryRouter>
+  );
+  return mock;
+};
 
-  it('renders login form with initial security notice and input fields', () => {
-    render(
-      <MemoryRouter initialEntries={['/login']}>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-          </Routes>
-        </AuthProvider>
-      </MemoryRouter>
-    );
+describe('Magic Link login', () => {
+  it('renders an email-only access form without simulated credentials', async () => {
+    renderLogin();
 
-    expect(screen.getByText(/Administración de Lectoria/i)).toBeInTheDocument();
-    expect(screen.getByText(/Acceso restringido al personal autorizado/i)).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Enviar enlace de acceso/i })).toBeEnabled();
     expect(screen.getByLabelText('Correo')).toBeInTheDocument();
-    expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Contraseña')).not.toBeInTheDocument();
   });
 
-  it('toggles password visibility when toggle button is clicked', () => {
-    render(
-      <MemoryRouter initialEntries={['/login']}>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-          </Routes>
-        </AuthProvider>
-      </MemoryRouter>
-    );
+  it('requests a Magic Link without creating public users', async () => {
+    const { auth } = renderLogin();
 
-    const passwordInput = screen.getByLabelText('Contraseña') as HTMLInputElement;
-    const toggleButton = screen.getByRole('button', { name: /Mostrar contraseña/i });
+    fireEvent.change(screen.getByLabelText('Correo'), {
+      target: { value: 'Admin@Lectoria.App' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Enviar enlace de acceso/i }));
 
-    expect(passwordInput.type).toBe('password');
-
-    fireEvent.click(toggleButton);
-    expect(passwordInput.type).toBe('text');
-
-    fireEvent.click(screen.getByRole('button', { name: /Ocultar contraseña/i }));
-    expect(passwordInput.type).toBe('password');
-  });
-
-  it('logs in directly and navigates after valid credentials submission', async () => {
-    render(
-      <MemoryRouter initialEntries={['/login']}>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/admin" element={<div>Dashboard Admin</div>} />
-          </Routes>
-        </AuthProvider>
-      </MemoryRouter>
-    );
-
-    const emailInput = screen.getByLabelText('Correo');
-    const passwordInput = screen.getByLabelText('Contraseña');
-
-    fireEvent.change(emailInput, { target: { value: 'admin@lectoria.app' } });
-    fireEvent.change(passwordInput, { target: { value: 'securepassword123' } });
-
-    fireEvent.click(screen.getByRole('button', { name: /Iniciar sesión/i }));
-
-    await waitFor(
-      () => {
-        expect(screen.getByText(/Acceso verificado|Dashboard Admin/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Revisa tu correo' })).toBeInTheDocument();
+    expect(auth.signInWithOtp).toHaveBeenCalledWith({
+      email: 'admin@lectoria.app',
+      options: {
+        emailRedirectTo: expect.stringMatching(/\/admin$/),
+        shouldCreateUser: false,
       },
-      { timeout: 3000 }
-    );
+    });
+  });
+
+  it('shows a clear rate-limit error from Supabase', async () => {
+    const { auth } = renderLogin();
+    auth.signInWithOtp.mockResolvedValueOnce({
+      data: { user: null, session: null },
+      error: { name: 'AuthApiError', message: 'rate limit', status: 429 },
+    });
+
+    fireEvent.change(screen.getByLabelText('Correo'), {
+      target: { value: 'admin@lectoria.app' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /Enviar enlace de acceso/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(/demasiados intentos/i);
+    });
   });
 });

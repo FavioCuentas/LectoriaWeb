@@ -2,3 +2,8 @@ node_modules
 
 .local-server/
 dist/
+
+# Local environment files. Keep the documented template versioned.
+.env
+.env.*
+!.env.example
