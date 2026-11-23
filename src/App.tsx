@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Login } from './pages/Login';
+import { Privacy } from './pages/Privacy';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { OverviewTab } from './components/dashboard/OverviewTab';
 import { DynamicAdminView } from './components/dashboard/DynamicAdminView';
@@ -60,6 +61,9 @@ export const App: React.FC = () => {
       <Routes>
         {/* Public Landing */}
         <Route path="/" element={<LandingPage />} />
+
+        {/* Política de privacidad (URL para App Store y Google Play) */}
+        <Route path="/privacidad" element={<Privacy />} />
 
         {/* Admin Login Flow */}
         <Route path="/login" element={<Login />} />

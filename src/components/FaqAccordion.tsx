@@ -14,7 +14,7 @@ export const FaqAccordion: React.FC = () => {
     { q: '¿Cómo funciona la prueba gratis?', a: 'Los planes Semestral y Anual incluyen 7 días gratis. Si cancelas antes de que terminen, no se te cobra nada. El plan De por vida es un pago único, sin prueba ni renovaciones.' },
     { q: '¿Puedo cancelar mi suscripción?', a: 'Sí, puedes cancelar tu suscripción cuando quieras y sin penalizaciones: en iPhone desde los ajustes de tu cuenta de App Store y en Android desde Google Play.' },
     { q: '¿Cómo elimino mis documentos?', a: 'Puedes eliminar cualquier documento de tu biblioteca en cualquier momento deslizando o mediante el menú de opciones del archivo.' },
-    { q: '¿Dónde puedo solicitar soporte?', a: 'Puedes escribirnos al correo oficial de soporte: soporte@lectoria.app.' }
+    { q: '¿Dónde puedo solicitar soporte?', a: 'Puedes escribirnos a favio.cuentas@orvexaio.com. La política de privacidad y la eliminación de cuenta están en lectoria.orvexaio.com/privacidad.' }
   ];
 
   const toggleFaq = (index: number) => {

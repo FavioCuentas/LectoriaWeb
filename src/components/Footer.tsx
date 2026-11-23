@@ -1,4 +1,5 @@
 import React from 'react';
+import { SUPPORT_EMAIL } from '../pages/Privacy';
 
 export const Footer: React.FC = () => {
   return (
@@ -26,16 +27,16 @@ export const Footer: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <a className="lect-link" href="#faq" style={{ fontSize: '13px', color: 'var(--color-text)', opacity: 0.75 }}>Ayuda</a>
             <a className="lect-link" href="#faq" style={{ fontSize: '13px', color: 'var(--color-text)', opacity: 0.75 }}>Preguntas frecuentes</a>
-            <a className="lect-link" href="mailto:soporte@lectoria.app" style={{ fontSize: '13px', color: 'var(--color-text)', opacity: 0.75 }}>Contacto</a>
+            <a className="lect-link" href={`mailto:${SUPPORT_EMAIL}`} style={{ fontSize: '13px', color: 'var(--color-text)', opacity: 0.75 }}>Contacto</a>
           </div>
         </div>
 
         <div>
           <div style={{ fontSize: '11.5px', letterSpacing: '.06em', textTransform: 'uppercase', color: 'color-mix(in srgb, var(--color-text) 55%, transparent)', marginBottom: '12px' }}>Legal</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <a className="lect-link" href="#" style={{ fontSize: '13px', color: 'var(--color-text)', opacity: 0.75 }}>Política de privacidad</a>
+            <a className="lect-link" href="/privacidad" style={{ fontSize: '13px', color: 'var(--color-text)', opacity: 0.75 }}>Política de privacidad</a>
             <a className="lect-link" href="#" style={{ fontSize: '13px', color: 'var(--color-text)', opacity: 0.75 }}>Términos y condiciones</a>
-            <a className="lect-link" href="#" style={{ fontSize: '13px', color: 'var(--color-text)', opacity: 0.75 }}>Gestión de datos</a>
+            <a className="lect-link" href="/privacidad#eliminar-cuenta" style={{ fontSize: '13px', color: 'var(--color-text)', opacity: 0.75 }}>Eliminar mi cuenta</a>
           </div>
         </div>
       </div>
@@ -43,7 +44,7 @@ export const Footer: React.FC = () => {
       <div className="container" style={{ paddingTop: '16px', paddingBottom: '32px', borderTop: '1px solid var(--color-divider)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', fontSize: '12px', color: 'color-mix(in srgb, var(--color-text) 55%, transparent)' }}>
         <span>© 2026 Lectoria. Todos los derechos reservados.</span>
         <span style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          <span>soporte@lectoria.app</span>
+          <span>{SUPPORT_EMAIL}</span>
           <a className="lect-link" href="#" style={{ opacity: 0.8 }}>Instagram</a>
           <a className="lect-link" href="#" style={{ opacity: 0.8 }}>X</a>
         </span>
