@@ -2,6 +2,9 @@ import type { PlanCode } from '../config/plans';
 
 export type DateRange = '7d' | '30d' | '90d';
 
+/** Plataforma de las apps; 'all' suma iOS, Android y cualquier otra. */
+export type PlatformFilter = 'all' | 'ios' | 'android';
+
 export interface StatMetric {
   id: string;
   label: string;
@@ -76,6 +79,8 @@ export interface DashboardKpis {
 export interface AdminDashboardData {
   generatedAt: string;
   rangeDays: number;
+  /** Plataforma a la que se limitan las cifras (v3 del RPC; ausente en v1/v2 = 'all'). */
+  platform?: PlatformFilter;
   kpis: DashboardKpis;
   activeUsers: UserActivePoint[];
   formatUsage: FormatUsageItem[];
@@ -92,6 +97,7 @@ export interface AdminDashboardData {
 
 export interface AdminOutletContext {
   dateRange: DateRange;
+  platform: PlatformFilter;
   dashboard: AdminDashboardData | null;
   dashboardLoading: boolean;
   dashboardError: string | null;

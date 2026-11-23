@@ -58,6 +58,19 @@ describe('Dashboard administrativo', () => {
     expect(await screen.findByRole('heading', { name: /Métricas clave \(últimos 7 días\)/i })).toBeInTheDocument();
   });
 
+  it('filtra todo el panel por plataforma', async () => {
+    const mock = renderDashboard();
+    await screen.findByText('Usuarios registrados');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Android' }));
+
+    await waitFor(() => {
+      expect(mock.rpc).toHaveBeenLastCalledWith('admin_dashboard_summary', { range_days: 30, platform_filter: 'android' });
+    });
+    expect(await screen.findByText(/solo Android/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Android' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
   it('muestra «Sin fuente» en lugar de un 0 cuando la métrica no tiene datos reales', async () => {
     renderDashboard({ unavailableMetrics: ['grossRevenueCents', 'semiannualUsers'] });
     await screen.findByText(/Datos reales de Supabase/i);

@@ -12,6 +12,23 @@ describe('Contrato de analítica administrativa', () => {
     expect(mock.rpc).toHaveBeenCalledWith('admin_dashboard_summary', { range_days: 90 });
   });
 
+  it('envía platform_filter solo cuando se filtra por una plataforma', async () => {
+    const mock = createSupabaseMock();
+    mock.rpc.mockResolvedValue({ data: createDashboardData(30), error: null });
+
+    await fetchAdminDashboard('30d', mock.client, 'ios');
+    expect(mock.rpc).toHaveBeenLastCalledWith('admin_dashboard_summary', { range_days: 30, platform_filter: 'ios' });
+    await fetchAdminDashboard('30d', mock.client, 'all');
+    expect(mock.rpc).toHaveBeenLastCalledWith('admin_dashboard_summary', { range_days: 30 });
+  });
+
+  it('pide aplicar la migración v3 si Supabase aún no acepta el filtro', async () => {
+    const mock = createSupabaseMock();
+    mock.rpc.mockResolvedValue({ data: null, error: { code: 'PGRST202' } });
+
+    await expect(fetchAdminDashboard('30d', mock.client, 'android')).rejects.toThrow(/migración v3/i);
+  });
+
   it('traduce el rechazo RLS a un mensaje administrativo', async () => {
     const mock = createSupabaseMock();
     mock.rpc.mockResolvedValue({ data: null, error: { code: '42501' } });

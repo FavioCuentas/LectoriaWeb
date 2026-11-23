@@ -4,7 +4,8 @@ import { useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { Download, LogOut, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../context/auth-context';
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
-import type { DateRange } from '../../types/dashboard';
+import type { DateRange, PlatformFilter } from '../../types/dashboard';
+import { PLATFORM_LABELS } from '../../lib/adminAnalytics';
 import { NAV_ITEMS } from '../../config/navigation';
 import { PLAN_LABELS } from '../../config/plans';
 import { UNAVAILABLE_VALUE } from '../../lib/dashboardAvailability';
@@ -20,7 +21,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ analyticsClient }) => 
   const location = useLocation();
   const { user, logout } = useAuth();
   const [dateRange, setDateRange] = useState<DateRange>('30d');
-  const { dashboard, loading, error, reload } = useAdminDashboard(dateRange, analyticsClient);
+  const [platform, setPlatform] = useState<PlatformFilter>('all');
+  const { dashboard, loading, error, reload } = useAdminDashboard(dateRange, analyticsClient, platform);
 
   const activeNavItem =
     NAV_ITEMS.find((item) =>
@@ -33,7 +35,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ analyticsClient }) => 
     const k = dashboard.kpis;
     // [etiqueta, valor, clave de la métrica para detectar «Sin fuente»]
     const metrics: Array<[string, string | number, string?]> = [
-      ['Usuarios registrados', k.usersRegistered],
+      [platform === 'all' ? 'Usuarios registrados' : `Cuentas que usan ${PLATFORM_LABELS[platform]}`, k.usersRegistered],
       ['Personas activas diarias (incluye invitados)', k.dailyActiveUsers],
       ['Personas activas semanales (incluye invitados)', k.weeklyActiveUsers],
       ['Personas activas mensuales (incluye invitados)', k.monthlyActiveUsers],
@@ -62,15 +64,21 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ analyticsClient }) => 
     ]);
 
     const rows = [
-      ['Métrica', 'Valor', 'Rango', 'Generado en'],
-      ...labels.map(([label, value]) => [label, value, `${dashboard.rangeDays} días`, dashboard.generatedAt]),
+      ['Métrica', 'Valor', 'Plataforma', 'Rango', 'Generado en'],
+      ...labels.map(([label, value]) => [
+        label,
+        value,
+        PLATFORM_LABELS[platform],
+        `${dashboard.rangeDays} días`,
+        dashboard.generatedAt,
+      ]),
     ];
     const csvContent = `\uFEFF${rows.map((row) => row.map(csvEscape).join(',')).join('\n')}`;
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `lectoria-informe-${activeNavItem.id}-${dateRange}.csv`;
+    link.download = `lectoria-informe-${activeNavItem.id}-${platform === 'all' ? 'todas' : platform}-${dateRange}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -129,6 +137,20 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ analyticsClient }) => 
           </div>
 
           <div className="admin-toolbar">
+            <div className="admin-range" role="group" aria-label="Plataforma">
+              {(['all', 'ios', 'android'] as PlatformFilter[]).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={platform === option}
+                  className={platform === option ? 'active' : ''}
+                  onClick={() => setPlatform(option)}
+                >
+                  {PLATFORM_LABELS[option]}
+                </button>
+              ))}
+            </div>
+
             <div className="admin-range" role="radiogroup" aria-label="Rango de fechas">
               {(['7d', '30d', '90d'] as DateRange[]).map((range) => (
                 <button
@@ -158,6 +180,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ analyticsClient }) => 
           <Outlet
             context={{
               dateRange,
+              platform,
               dashboard,
               dashboardLoading: loading,
               dashboardError: error,

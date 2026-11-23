@@ -18,6 +18,7 @@ import {
 import type { AdminOutletContext, StatMetric } from '../../types/dashboard';
 import { PLAN_LABELS, planPriceDetail } from '../../config/plans';
 import { UNAVAILABLE_VALUE, unavailableDetail } from '../../lib/dashboardAvailability';
+import { PLATFORM_LABELS } from '../../lib/adminAnalytics';
 
 const numberFormatter = new Intl.NumberFormat('es-ES');
 const currencyFormatter = new Intl.NumberFormat('es-ES', {
@@ -43,7 +44,7 @@ const ChartCard: React.FC<{ title: string; children: React.ReactNode }> = ({ tit
 );
 
 export const OverviewTab: React.FC = () => {
-  const { dateRange, dashboard, dashboardLoading, dashboardError, reloadDashboard } =
+  const { dateRange, platform, dashboard, dashboardLoading, dashboardError, reloadDashboard } =
     useOutletContext<AdminOutletContext>();
 
   if (dashboardLoading) {
@@ -79,7 +80,7 @@ export const OverviewTab: React.FC = () => {
   const isUnavailable = (key: string) => dashboard.unavailableMetrics.includes(key);
   const period = `Últimos ${dashboard.rangeDays} días`;
   const rawStats: Array<StatMetric & { sourceKey?: string }> = [
-    { id: 'users', label: 'Usuarios registrados', value: numberFormatter.format(kpis.usersRegistered), delta: 'Cuentas creadas (total)', deltaType: 'neutral', category: 'users' },
+    { id: 'users', label: 'Usuarios registrados', value: numberFormatter.format(kpis.usersRegistered), delta: platform === 'all' ? 'Cuentas creadas (total)' : `Cuentas que usan ${PLATFORM_LABELS[platform]}`, deltaType: 'neutral', category: 'users' },
     { id: 'dau', label: 'Personas activas hoy', value: numberFormatter.format(kpis.dailyActiveUsers), delta: 'Últimas 24 h · incluye invitados', deltaType: 'neutral', category: 'users' },
     { id: 'wau', label: 'Personas activas semanales', value: numberFormatter.format(kpis.weeklyActiveUsers), delta: 'Últimos 7 días · incluye invitados', deltaType: 'neutral', category: 'users' },
     { id: 'mau', label: 'Personas activas mensuales', value: numberFormatter.format(kpis.monthlyActiveUsers), delta: 'Últimos 30 días · incluye invitados', deltaType: 'neutral', category: 'users' },
@@ -112,7 +113,8 @@ export const OverviewTab: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       <section>
         <h2 style={{ fontSize: '16px', marginBottom: '14px', color: 'var(--color-neutral-800)' }}>
-          Métricas clave ({dateRange === '7d' ? 'últimos 7 días' : dateRange === '30d' ? 'últimos 30 días' : 'últimos 90 días'})
+          Métricas clave ({dateRange === '7d' ? 'últimos 7 días' : dateRange === '30d' ? 'últimos 30 días' : 'últimos 90 días'}
+          {platform === 'all' ? '' : ` · solo ${PLATFORM_LABELS[platform]}`})
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
           {stats.map((metric) => (

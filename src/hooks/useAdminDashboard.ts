@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fetchAdminDashboard } from '../lib/adminAnalytics';
-import type { AdminDashboardData, DateRange } from '../types/dashboard';
+import type { AdminDashboardData, DateRange, PlatformFilter } from '../types/dashboard';
 
-export const useAdminDashboard = (dateRange: DateRange, client?: SupabaseClient | null) => {
+export const useAdminDashboard = (
+  dateRange: DateRange,
+  client?: SupabaseClient | null,
+  platform: PlatformFilter = 'all'
+) => {
   const [dashboard, setDashboard] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +20,7 @@ export const useAdminDashboard = (dateRange: DateRange, client?: SupabaseClient 
     setLoading(true);
     setError(null);
 
-    void fetchAdminDashboard(dateRange, client)
+    void fetchAdminDashboard(dateRange, client, platform)
       .then((data) => {
         if (!active) return;
         setDashboard(data);
@@ -33,7 +37,7 @@ export const useAdminDashboard = (dateRange: DateRange, client?: SupabaseClient 
     return () => {
       active = false;
     };
-  }, [client, dateRange, reloadKey]);
+  }, [client, dateRange, platform, reloadKey]);
 
   return { dashboard, loading, error, reload };
 };

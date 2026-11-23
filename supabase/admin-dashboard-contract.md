@@ -172,3 +172,20 @@ respuesta v1 (`semiannualUsers` = 0 y marca como «Sin fuente» lo que la v1 no 
 Prueba local: `node supabase/tests/admin_dashboard_summary_v2.mjs <ruta a pglite>`
 (aplica la v1, luego la v2 dos veces, y verifica permisos, rangos, invitados,
 formatos, minutos, errores, plataformas, embudo y privacidad).
+
+## v3 (2026-11-23): filtro por plataforma
+
+Migración: `migrations/20261123000000_admin_dashboard_summary_v3_platform.sql` (aplicar después de la v2).
+
+- Firma: `admin_dashboard_summary(range_days integer default 30, platform_filter text default 'all')`.
+  `platform_filter` admite `all`, `ios` o `android`; cualquier otro valor devuelve `22023`.
+- La firma anterior `(integer)` se elimina para que la llamada con solo `range_days` no sea ambigua.
+  El panel envía `platform_filter` únicamente cuando se elige iOS o Android, así que con "Todas"
+  sigue funcionando aunque la v3 aún no esté aplicada.
+- Cada evento se clasifica con la misma regla de `platformVersions` (iPhone/iPad/iOS → `ios`,
+  Android → `android`). Con filtro, actividad, uso, embudo, formatos y versiones se limitan a
+  esa plataforma.
+- `usersRegistered` / `newUsers` con filtro = cuentas de `auth.users` que enviaron al menos un
+  evento desde esa plataforma (Auth no guarda la plataforma).
+- La respuesta incluye `platform`.
+- Prueba local: `node supabase/tests/admin_dashboard_summary_v3.mjs <ruta a pglite/dist/index.js>`.

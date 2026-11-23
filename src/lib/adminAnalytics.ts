@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AdminDashboardData, DateRange } from '../types/dashboard';
+import type { AdminDashboardData, DateRange, PlatformFilter } from '../types/dashboard';
 import { supabase } from './supabase';
 import { PLAN_CODES } from '../config/plans';
 
@@ -96,21 +96,33 @@ const isDashboardData = (value: unknown): value is AdminDashboardData => {
   );
 };
 
+export const PLATFORM_LABELS: Record<PlatformFilter, string> = {
+  all: 'Todas',
+  ios: 'iOS',
+  android: 'Android',
+};
+
 export const fetchAdminDashboard = async (
   dateRange: DateRange,
-  client: SupabaseClient | null = supabase
+  client: SupabaseClient | null = supabase,
+  platform: PlatformFilter = 'all'
 ): Promise<AdminDashboardData> => {
   if (!client) {
     throw new Error('Configura VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY para consultar las métricas.');
   }
 
-  const { data, error } = await client.rpc('admin_dashboard_summary', {
-    range_days: DATE_RANGE_DAYS[dateRange],
-  });
+  // Sin filtro se envía solo range_days: así también funciona con el RPC v2 (sin platform_filter).
+  const params: Record<string, string | number> = { range_days: DATE_RANGE_DAYS[dateRange] };
+  if (platform !== 'all') params.platform_filter = platform;
+  const { data, error } = await client.rpc('admin_dashboard_summary', params);
 
   if (error) {
     if (error.code === '42501') {
       throw new Error('Tu sesión no tiene permiso de administrador para consultar las métricas.');
+    }
+    // PGRST202: Supabase no encuentra la función con platform_filter (falta la migración v3).
+    if (platform !== 'all' && error.code === 'PGRST202') {
+      throw new Error('Para filtrar por plataforma aplica la migración v3 del panel (20261123000000_admin_dashboard_summary_v3_platform.sql) en Supabase.');
     }
 
     throw new Error('No se pudieron cargar las métricas de Supabase. Inténtalo nuevamente.');
