@@ -1,7 +1,7 @@
 // Planes canónicos de Lectoria. Deben coincidir con las apps iOS y Android
 // (decisión del 2026-11-22):
 //   iOS:     com.lectoria.premium.semiannual / .yearly / .lifetime
-//   Android: premium_semiannual / premium_annual / premium_lifetime
+//   Android: com.orvexa.lectoria.premium_semiannual / .premium_annual / .premium_lifetime
 // Las suscripciones (semestral y anual) incluyen 7 días de prueba gratis.
 export type PlanCode = 'free' | 'semiannual' | 'annual' | 'lifetime';
 

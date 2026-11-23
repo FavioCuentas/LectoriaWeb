@@ -42,7 +42,7 @@ Planes canónicos:
 | `annual` | Anual (recomendado) | USD 7,99/año (7 días de prueba) |
 | `lifetime` | De por vida | USD 19,99, pago único |
 
-IDs de tienda: iOS `com.lectoria.premium.semiannual` / `.yearly` / `.lifetime`; Android `premium_semiannual` / `premium_annual` / `premium_lifetime`.
+IDs de tienda: iOS `com.lectoria.premium.semiannual` / `.yearly` / `.lifetime`; Android `com.orvexa.lectoria.premium_semiannual` / `.premium_annual` / `.premium_lifetime`.
 
 ## Verificación
 
