@@ -66,15 +66,6 @@ export const SolutionSection: React.FC = () => {
       )
     },
     {
-      title: 'Lectura en voz alta',
-      desc: 'Escucha tus documentos cuando no puedas leer.',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="7" y="2" width="10" height="20" rx="2.5" /><line x1="11" y1="18" x2="13" y2="18" />
-        </svg>
-      )
-    },
-    {
       title: 'Seguimiento de progreso',
       desc: 'Ve cuánto llevas de cada documento, siempre actualizado.',
       icon: (
