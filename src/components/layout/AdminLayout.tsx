@@ -6,6 +6,8 @@ import { useAuth } from '../../context/auth-context';
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
 import type { DateRange } from '../../types/dashboard';
 import { NAV_ITEMS } from '../../config/navigation';
+import { PLAN_LABELS } from '../../config/plans';
+import { UNAVAILABLE_VALUE } from '../../lib/dashboardAvailability';
 
 interface AdminLayoutProps {
   analyticsClient?: SupabaseClient | null;
@@ -28,27 +30,36 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ analyticsClient }) => 
   const handleDownloadReport = () => {
     if (!dashboard) return;
 
-    const labels: Array<[string, string | number]> = [
-      ['Usuarios registrados', dashboard.kpis.usersRegistered],
-      ['Usuarios activos diarios (DAU)', dashboard.kpis.dailyActiveUsers],
-      ['Usuarios activos semanales (WAU)', dashboard.kpis.weeklyActiveUsers],
-      ['Usuarios activos mensuales (MAU)', dashboard.kpis.monthlyActiveUsers],
-      ['Nuevos usuarios', dashboard.kpis.newUsers],
-      ['Usuarios Free', dashboard.kpis.freeUsers],
-      ['Usuarios Anual (USD 5/año)', dashboard.kpis.annualUsers],
-      ['Usuarios De por vida (USD 20)', dashboard.kpis.lifetimeUsers],
-      ['Conversión a pago (%)', dashboard.kpis.paymentConversionPct],
-      ['Ingresos brutos del periodo (centavos USD)', dashboard.kpis.grossRevenueCents],
-      ['Documentos importados', dashboard.kpis.documentsImported],
-      ['Sesiones de lectura', dashboard.kpis.readingSessions],
-      ['Tiempo promedio de lectura (min)', dashboard.kpis.avgReadingMinutes],
-      ['Uso de diccionario', dashboard.kpis.dictionaryUses],
-      ['Uso de traducción', dashboard.kpis.translationUses],
-      ['Uso de IA', dashboard.kpis.aiUses],
-      ['Uso de texto a voz', dashboard.kpis.textToSpeechUses],
-      ['Errores técnicos', dashboard.kpis.technicalErrors],
-      ['Versión más utilizada', dashboard.kpis.topAppVersion ?? 'Sin datos'],
+    const k = dashboard.kpis;
+    // [etiqueta, valor, clave de la métrica para detectar «Sin fuente»]
+    const metrics: Array<[string, string | number, string?]> = [
+      ['Usuarios registrados', k.usersRegistered],
+      ['Personas activas diarias (incluye invitados)', k.dailyActiveUsers],
+      ['Personas activas semanales (incluye invitados)', k.weeklyActiveUsers],
+      ['Personas activas mensuales (incluye invitados)', k.monthlyActiveUsers],
+      ['Nuevas cuentas', k.newUsers],
+      [`Plan ${PLAN_LABELS.free}`, k.freeUsers, 'freeUsers'],
+      [`Plan ${PLAN_LABELS.semiannual}`, k.semiannualUsers, 'semiannualUsers'],
+      [`Plan ${PLAN_LABELS.annual}`, k.annualUsers, 'annualUsers'],
+      [`Plan ${PLAN_LABELS.lifetime}`, k.lifetimeUsers, 'lifetimeUsers'],
+      ['Usuarios de pago', k.payingUsers, 'payingUsers'],
+      ['Conversión a pago (%)', k.paymentConversionPct, 'paymentConversionPct'],
+      ['Ingresos brutos del periodo (centavos USD)', k.grossRevenueCents, 'grossRevenueCents'],
+      ['Cancelaciones', k.cancellations, 'cancellations'],
+      ['Documentos importados', k.documentsImported, 'documentsImported'],
+      ['Sesiones de lectura', k.readingSessions],
+      ['Tiempo promedio de lectura (min)', k.avgReadingMinutes, 'avgReadingMinutes'],
+      ['Uso de diccionario', k.dictionaryUses],
+      ['Uso de traducción', k.translationUses],
+      ['Uso de IA', k.aiUses],
+      ['Uso de texto a voz', k.textToSpeechUses],
+      ['Errores técnicos', k.technicalErrors, 'technicalErrors'],
+      ['Versión más utilizada', k.topAppVersion ?? 'Sin datos'],
     ];
+    const labels: Array<[string, string | number]> = metrics.map(([label, value, key]) => [
+      label,
+      key && dashboard.unavailableMetrics.includes(key) ? UNAVAILABLE_VALUE : value,
+    ]);
 
     const rows = [
       ['Métrica', 'Valor', 'Rango', 'Generado en'],

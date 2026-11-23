@@ -1,7 +1,8 @@
 import React from 'react';
 import { useLocation, useOutletContext } from 'react-router-dom';
 import { AlertCircle, Database, RefreshCw, ShieldCheck } from 'lucide-react';
-import { PLAN_LABELS } from '../../config/plans';
+import { PLAN_LABELS, planPriceDetail } from '../../config/plans';
+import { UNAVAILABLE_VALUE, unavailableDetail } from '../../lib/dashboardAvailability';
 import type { AdminOutletContext } from '../../types/dashboard';
 
 const numberFormatter = new Intl.NumberFormat('es-ES');
@@ -19,6 +20,14 @@ const Card: React.FC<{ title: string; value: string; detail: string }> = ({ titl
     <div style={{ fontSize: '11.5px', color: 'var(--color-neutral-600)' }}>{detail}</div>
   </article>
 );
+
+/** Tarjeta que muestra «Sin fuente» si la métrica todavía no tiene datos reales. */
+const AvailabilityCard: React.FC<{ title: string; metric: string; value: string; detail: string; unavailableMetrics: string[] }> = ({
+  title, metric, value, detail, unavailableMetrics,
+}) =>
+  unavailableMetrics.includes(metric)
+    ? <Card title={title} value={UNAVAILABLE_VALUE} detail={unavailableDetail(metric)} />
+    : <Card title={title} value={value} detail={detail} />;
 
 const CardGrid: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '14px' }}>
@@ -87,10 +96,11 @@ export const DynamicAdminView: React.FC = () => {
         <h2 style={{ fontSize: '18px', margin: 0 }}>Usuarios y planes</h2>
         <CardGrid>
           <Card title="Usuarios registrados" value={numberFormatter.format(kpis.usersRegistered)} detail="Total acumulado" />
-          <Card title="Nuevos usuarios" value={numberFormatter.format(kpis.newUsers)} detail={period} />
-          <Card title="Plan Free" value={numberFormatter.format(kpis.freeUsers)} detail="USD 0" />
-          <Card title="Plan Anual" value={numberFormatter.format(kpis.annualUsers)} detail="USD 5 por año" />
-          <Card title="Plan De por vida" value={numberFormatter.format(kpis.lifetimeUsers)} detail="USD 20 pago único" />
+          <Card title="Nuevas cuentas" value={numberFormatter.format(kpis.newUsers)} detail={period} />
+          <AvailabilityCard unavailableMetrics={dashboard.unavailableMetrics} title="Plan Gratis" metric="freeUsers" value={numberFormatter.format(kpis.freeUsers)} detail={planPriceDetail('free')} />
+          <AvailabilityCard unavailableMetrics={dashboard.unavailableMetrics} title="Plan Semestral" metric="semiannualUsers" value={numberFormatter.format(kpis.semiannualUsers)} detail={planPriceDetail('semiannual')} />
+          <AvailabilityCard unavailableMetrics={dashboard.unavailableMetrics} title="Plan Anual" metric="annualUsers" value={numberFormatter.format(kpis.annualUsers)} detail={planPriceDetail('annual')} />
+          <AvailabilityCard unavailableMetrics={dashboard.unavailableMetrics} title="Plan De por vida" metric="lifetimeUsers" value={numberFormatter.format(kpis.lifetimeUsers)} detail={planPriceDetail('lifetime')} />
         </CardGrid>
         <p style={{ margin: 0, color: 'var(--color-neutral-700)', fontSize: '13px' }}>
           Esta vista muestra agregados. El listado con correos, invitaciones y cambios de rol requiere un RPC administrativo separado y auditado.
@@ -104,13 +114,13 @@ export const DynamicAdminView: React.FC = () => {
       <section style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <h2 style={{ fontSize: '18px', margin: 0 }}>Analítica de adopción</h2>
         <CardGrid>
-          <Card title="DAU" value={numberFormatter.format(kpis.dailyActiveUsers)} detail="Usuarios únicos en 24 horas" />
-          <Card title="WAU" value={numberFormatter.format(kpis.weeklyActiveUsers)} detail="Usuarios únicos en 7 días" />
-          <Card title="MAU" value={numberFormatter.format(kpis.monthlyActiveUsers)} detail="Usuarios únicos en 30 días" />
-          <Card title="Conversión a pago" value={`${kpis.paymentConversionPct.toLocaleString('es-ES')}%`} detail="Pagadores / registrados" />
+          <Card title="DAU" value={numberFormatter.format(kpis.dailyActiveUsers)} detail="Personas en 24 horas (incluye invitados)" />
+          <Card title="WAU" value={numberFormatter.format(kpis.weeklyActiveUsers)} detail="Personas en 7 días (incluye invitados)" />
+          <Card title="MAU" value={numberFormatter.format(kpis.monthlyActiveUsers)} detail="Personas en 30 días (incluye invitados)" />
+          <AvailabilityCard unavailableMetrics={dashboard.unavailableMetrics} title="Conversión a pago" metric="paymentConversionPct" value={`${kpis.paymentConversionPct.toLocaleString('es-ES')}%`} detail="Pagadores / registrados" />
         </CardGrid>
         <DataTable
-          headers={['Fecha', 'Usuarios activos']}
+          headers={['Fecha', 'Personas activas']}
           rows={dashboard.activeUsers.map((item) => [item.date, numberFormatter.format(item.users)])}
         />
       </section>
@@ -121,7 +131,7 @@ export const DynamicAdminView: React.FC = () => {
     return (
       <section style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <h2 style={{ fontSize: '18px', margin: 0 }}>Documentos importados</h2>
-        <CardGrid><Card title="Importaciones" value={numberFormatter.format(kpis.documentsImported)} detail={period} /></CardGrid>
+        <CardGrid><AvailabilityCard unavailableMetrics={dashboard.unavailableMetrics} title="Importaciones" metric="documentsImported" value={numberFormatter.format(kpis.documentsImported)} detail={period} /></CardGrid>
         <DataTable headers={['Formato', 'Importaciones', 'Participación']} rows={dashboard.formatUsage.map((item) => [item.name, numberFormatter.format(item.count), `${item.pct.toLocaleString('es-ES')}%`])} />
       </section>
     );
@@ -133,7 +143,7 @@ export const DynamicAdminView: React.FC = () => {
         <h2 style={{ fontSize: '18px', margin: 0 }}>Actividad de lectura</h2>
         <CardGrid>
           <Card title="Sesiones de lectura" value={numberFormatter.format(kpis.readingSessions)} detail={period} />
-          <Card title="Duración promedio" value={`${kpis.avgReadingMinutes.toLocaleString('es-ES')} min`} detail="Solo sesiones finalizadas" />
+          <AvailabilityCard unavailableMetrics={dashboard.unavailableMetrics} title="Duración promedio" metric="avgReadingMinutes" value={`${kpis.avgReadingMinutes.toLocaleString('es-ES')} min`} detail="Solo sesiones finalizadas" />
           <Card title="Uso de texto a voz" value={numberFormatter.format(kpis.textToSpeechUses)} detail={period} />
         </CardGrid>
       </section>
@@ -171,10 +181,10 @@ export const DynamicAdminView: React.FC = () => {
       <section style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <h2 style={{ fontSize: '18px', margin: 0 }}>Suscripciones e ingresos</h2>
         <CardGrid>
-          <Card title="Usuarios de pago" value={numberFormatter.format(kpis.payingUsers)} detail="Anual + De por vida" />
-          <Card title="Conversión a pago" value={`${kpis.paymentConversionPct.toLocaleString('es-ES')}%`} detail="Pagadores / registrados" />
-          <Card title="Ingresos brutos" value={currencyFormatter.format(kpis.grossRevenueCents / 100)} detail={period} />
-          <Card title="Cancelaciones" value={numberFormatter.format(kpis.cancellations)} detail={period} />
+          <AvailabilityCard unavailableMetrics={dashboard.unavailableMetrics} title="Usuarios de pago" metric="payingUsers" value={numberFormatter.format(kpis.payingUsers)} detail="Semestral + Anual + De por vida" />
+          <AvailabilityCard unavailableMetrics={dashboard.unavailableMetrics} title="Conversión a pago" metric="paymentConversionPct" value={`${kpis.paymentConversionPct.toLocaleString('es-ES')}%`} detail="Pagadores / registrados" />
+          <AvailabilityCard unavailableMetrics={dashboard.unavailableMetrics} title="Ingresos brutos" metric="grossRevenueCents" value={currencyFormatter.format(kpis.grossRevenueCents / 100)} detail={period} />
+          <AvailabilityCard unavailableMetrics={dashboard.unavailableMetrics} title="Cancelaciones" metric="cancellations" value={numberFormatter.format(kpis.cancellations)} detail={period} />
         </CardGrid>
         <DataTable headers={['Plan', 'Usuarios', 'Participación']} rows={dashboard.planDistribution.map((item) => [PLAN_LABELS[item.plan], numberFormatter.format(item.count), `${item.pct.toLocaleString('es-ES')}%`])} />
       </section>
@@ -185,7 +195,7 @@ export const DynamicAdminView: React.FC = () => {
     return (
       <section style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <h2 style={{ fontSize: '18px', margin: 0 }}>Errores técnicos</h2>
-        <CardGrid><Card title="Eventos de error" value={numberFormatter.format(kpis.technicalErrors)} detail={period} /></CardGrid>
+        <CardGrid><AvailabilityCard unavailableMetrics={dashboard.unavailableMetrics} title="Eventos de error" metric="technicalErrors" value={numberFormatter.format(kpis.technicalErrors)} detail={period} /></CardGrid>
         <p style={{ margin: 0, color: 'var(--color-neutral-700)', fontSize: '13px' }}>
           Los eventos deben incluir código, plataforma y versión de la app, sin texto de documentos, credenciales ni datos personales.
         </p>

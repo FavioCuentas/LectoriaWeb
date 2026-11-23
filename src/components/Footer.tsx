@@ -9,7 +9,7 @@ export const Footer: React.FC = () => {
             <img src="/assets/lectoria-logo-institucional.png" alt="Lectoria" style={{ width: '30px', height: '30px', borderRadius: '8px', objectFit: 'cover' }} />
             <span style={{ fontFamily: 'var(--font-heading)', fontSize: '16px' }}>Lectoria</span>
           </div>
-          <p style={{ fontSize: '12.5px', color: 'color-mix(in srgb, var(--color-text) 60%, transparent)', maxWidth: '24ch' }}>Lectura y estudio inteligente para iPhone.</p>
+          <p style={{ fontSize: '12.5px', color: 'color-mix(in srgb, var(--color-text) 60%, transparent)', maxWidth: '24ch' }}>Lectura y estudio inteligente para iPhone y Android.</p>
         </div>
 
         <div>

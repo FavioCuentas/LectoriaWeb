@@ -54,6 +54,7 @@ export interface DashboardKpis {
   monthlyActiveUsers: number;
   newUsers: number;
   freeUsers: number;
+  semiannualUsers: number;
   annualUsers: number;
   lifetimeUsers: number;
   payingUsers: number;
@@ -82,6 +83,11 @@ export interface AdminDashboardData {
   funnel: FunnelStep[];
   platformVersions: PlatformVersionItem[];
   planDistribution: PlanDistributionItem[];
+  /**
+   * KPIs (claves de DashboardKpis) o colecciones sin fuente confirmada.
+   * El panel las muestra como «Sin fuente» en lugar de un 0 engañoso.
+   */
+  unavailableMetrics: string[];
 }
 
 export interface AdminOutletContext {

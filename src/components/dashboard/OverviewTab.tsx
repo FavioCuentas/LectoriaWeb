@@ -16,7 +16,8 @@ import {
   YAxis,
 } from 'recharts';
 import type { AdminOutletContext, StatMetric } from '../../types/dashboard';
-import { PLAN_LABELS } from '../../config/plans';
+import { PLAN_LABELS, planPriceDetail } from '../../config/plans';
+import { UNAVAILABLE_VALUE, unavailableDetail } from '../../lib/dashboardAvailability';
 
 const numberFormatter = new Intl.NumberFormat('es-ES');
 const currencyFormatter = new Intl.NumberFormat('es-ES', {
@@ -28,9 +29,9 @@ const currencyFormatter = new Intl.NumberFormat('es-ES', {
 
 const chartColors = ['#c67139', '#7a8a5e', '#d67f48', '#56633f', '#f6a06b', '#8fa073'];
 
-const EmptyChart: React.FC = () => (
-  <div style={{ minHeight: '190px', display: 'grid', placeContent: 'center', color: 'var(--color-neutral-600)', fontSize: '13px' }}>
-    Sin eventos para el periodo seleccionado.
+const EmptyChart: React.FC<{ unavailableKey?: string }> = ({ unavailableKey }) => (
+  <div style={{ minHeight: '190px', display: 'grid', placeContent: 'center', textAlign: 'center', color: 'var(--color-neutral-600)', fontSize: '13px' }}>
+    {unavailableKey ? `${UNAVAILABLE_VALUE}. ${unavailableDetail(unavailableKey)}.` : 'Sin eventos para el periodo seleccionado.'}
   </div>
 );
 
@@ -75,29 +76,37 @@ export const OverviewTab: React.FC = () => {
     ...item,
     label: PLAN_LABELS[item.plan],
   }));
-  const stats: StatMetric[] = [
-    { id: 'users', label: 'Usuarios registrados', value: numberFormatter.format(kpis.usersRegistered), delta: 'Total acumulado', deltaType: 'neutral', category: 'users' },
-    { id: 'dau', label: 'Usuarios activos diarios', value: numberFormatter.format(kpis.dailyActiveUsers), delta: 'DAU de las últimas 24 horas', deltaType: 'neutral', category: 'users' },
-    { id: 'wau', label: 'Usuarios activos semanales', value: numberFormatter.format(kpis.weeklyActiveUsers), delta: 'WAU de los últimos 7 días', deltaType: 'neutral', category: 'users' },
-    { id: 'mau', label: 'Usuarios activos mensuales', value: numberFormatter.format(kpis.monthlyActiveUsers), delta: 'MAU de los últimos 30 días', deltaType: 'neutral', category: 'users' },
-    { id: 'new-users', label: 'Nuevos usuarios', value: numberFormatter.format(kpis.newUsers), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'users' },
-    { id: 'free', label: 'Plan Free', value: numberFormatter.format(kpis.freeUsers), delta: 'USD 0', deltaType: 'neutral', category: 'financial' },
-    { id: 'annual', label: 'Plan Anual', value: numberFormatter.format(kpis.annualUsers), delta: 'USD 5 por año', deltaType: 'positive', category: 'financial' },
-    { id: 'lifetime', label: 'Plan De por vida', value: numberFormatter.format(kpis.lifetimeUsers), delta: 'USD 20 pago único', deltaType: 'positive', category: 'financial' },
-    { id: 'paying', label: 'Usuarios de pago', value: numberFormatter.format(kpis.payingUsers), delta: 'Anual + De por vida', deltaType: 'positive', category: 'financial' },
-    { id: 'conversion', label: 'Conversión a pago', value: `${kpis.paymentConversionPct.toLocaleString('es-ES')}%`, delta: 'Usuarios de pago / registrados', deltaType: 'neutral', category: 'financial' },
-    { id: 'revenue', label: 'Ingresos brutos', value: currencyFormatter.format(kpis.grossRevenueCents / 100), delta: `Transacciones de ${dashboard.rangeDays} días`, deltaType: 'positive', category: 'financial' },
-    { id: 'cancellations', label: 'Cancelaciones', value: numberFormatter.format(kpis.cancellations), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'negative', category: 'financial' },
-    { id: 'documents', label: 'Documentos importados', value: numberFormatter.format(kpis.documentsImported), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'usage' },
-    { id: 'reading', label: 'Sesiones de lectura', value: numberFormatter.format(kpis.readingSessions), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'usage' },
-    { id: 'reading-time', label: 'Tiempo promedio de lectura', value: `${kpis.avgReadingMinutes.toLocaleString('es-ES')} min`, delta: 'Por sesión finalizada', deltaType: 'neutral', category: 'usage' },
-    { id: 'dictionary', label: 'Uso de diccionario', value: numberFormatter.format(kpis.dictionaryUses), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'usage' },
-    { id: 'translation', label: 'Uso de traducción', value: numberFormatter.format(kpis.translationUses), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'usage' },
-    { id: 'ai', label: 'Uso de IA', value: numberFormatter.format(kpis.aiUses), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'usage' },
-    { id: 'tts', label: 'Uso de texto a voz', value: numberFormatter.format(kpis.textToSpeechUses), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'neutral', category: 'usage' },
-    { id: 'errors', label: 'Errores técnicos', value: numberFormatter.format(kpis.technicalErrors), delta: `Últimos ${dashboard.rangeDays} días`, deltaType: 'negative', category: 'technical' },
+  const isUnavailable = (key: string) => dashboard.unavailableMetrics.includes(key);
+  const period = `Últimos ${dashboard.rangeDays} días`;
+  const rawStats: Array<StatMetric & { sourceKey?: string }> = [
+    { id: 'users', label: 'Usuarios registrados', value: numberFormatter.format(kpis.usersRegistered), delta: 'Cuentas creadas (total)', deltaType: 'neutral', category: 'users' },
+    { id: 'dau', label: 'Personas activas hoy', value: numberFormatter.format(kpis.dailyActiveUsers), delta: 'Últimas 24 h · incluye invitados', deltaType: 'neutral', category: 'users' },
+    { id: 'wau', label: 'Personas activas semanales', value: numberFormatter.format(kpis.weeklyActiveUsers), delta: 'Últimos 7 días · incluye invitados', deltaType: 'neutral', category: 'users' },
+    { id: 'mau', label: 'Personas activas mensuales', value: numberFormatter.format(kpis.monthlyActiveUsers), delta: 'Últimos 30 días · incluye invitados', deltaType: 'neutral', category: 'users' },
+    { id: 'new-users', label: 'Nuevas cuentas', value: numberFormatter.format(kpis.newUsers), delta: period, deltaType: 'neutral', category: 'users' },
+    { id: 'free', sourceKey: 'freeUsers', label: 'Plan Gratis', value: numberFormatter.format(kpis.freeUsers), delta: planPriceDetail('free'), deltaType: 'neutral', category: 'financial' },
+    { id: 'semiannual', sourceKey: 'semiannualUsers', label: 'Plan Semestral', value: numberFormatter.format(kpis.semiannualUsers), delta: planPriceDetail('semiannual'), deltaType: 'positive', category: 'financial' },
+    { id: 'annual', sourceKey: 'annualUsers', label: 'Plan Anual', value: numberFormatter.format(kpis.annualUsers), delta: planPriceDetail('annual'), deltaType: 'positive', category: 'financial' },
+    { id: 'lifetime', sourceKey: 'lifetimeUsers', label: 'Plan De por vida', value: numberFormatter.format(kpis.lifetimeUsers), delta: planPriceDetail('lifetime'), deltaType: 'positive', category: 'financial' },
+    { id: 'paying', sourceKey: 'payingUsers', label: 'Usuarios de pago', value: numberFormatter.format(kpis.payingUsers), delta: 'Semestral + Anual + De por vida', deltaType: 'positive', category: 'financial' },
+    { id: 'conversion', sourceKey: 'paymentConversionPct', label: 'Conversión a pago', value: `${kpis.paymentConversionPct.toLocaleString('es-ES')}%`, delta: 'Usuarios de pago / registrados', deltaType: 'neutral', category: 'financial' },
+    { id: 'revenue', sourceKey: 'grossRevenueCents', label: 'Ingresos brutos', value: currencyFormatter.format(kpis.grossRevenueCents / 100), delta: `Transacciones de ${dashboard.rangeDays} días`, deltaType: 'positive', category: 'financial' },
+    { id: 'cancellations', sourceKey: 'cancellations', label: 'Cancelaciones', value: numberFormatter.format(kpis.cancellations), delta: period, deltaType: 'negative', category: 'financial' },
+    { id: 'documents', sourceKey: 'documentsImported', label: 'Documentos importados', value: numberFormatter.format(kpis.documentsImported), delta: period, deltaType: 'neutral', category: 'usage' },
+    { id: 'reading', sourceKey: 'readingSessions', label: 'Sesiones de lectura', value: numberFormatter.format(kpis.readingSessions), delta: period, deltaType: 'neutral', category: 'usage' },
+    { id: 'reading-time', sourceKey: 'avgReadingMinutes', label: 'Tiempo promedio de lectura', value: `${kpis.avgReadingMinutes.toLocaleString('es-ES')} min`, delta: 'Por sesión finalizada', deltaType: 'neutral', category: 'usage' },
+    { id: 'dictionary', sourceKey: 'dictionaryUses', label: 'Uso de diccionario', value: numberFormatter.format(kpis.dictionaryUses), delta: period, deltaType: 'neutral', category: 'usage' },
+    { id: 'translation', sourceKey: 'translationUses', label: 'Uso de traducción', value: numberFormatter.format(kpis.translationUses), delta: period, deltaType: 'neutral', category: 'usage' },
+    { id: 'ai', sourceKey: 'aiUses', label: 'Uso de IA', value: numberFormatter.format(kpis.aiUses), delta: period, deltaType: 'neutral', category: 'usage' },
+    { id: 'tts', sourceKey: 'textToSpeechUses', label: 'Uso de texto a voz', value: numberFormatter.format(kpis.textToSpeechUses), delta: period, deltaType: 'neutral', category: 'usage' },
+    { id: 'errors', sourceKey: 'technicalErrors', label: 'Errores técnicos', value: numberFormatter.format(kpis.technicalErrors), delta: period, deltaType: 'negative', category: 'technical' },
     { id: 'version', label: 'Versión más utilizada', value: kpis.topAppVersion ?? 'Sin datos', delta: kpis.topAppVersion ? `${kpis.topAppVersionPct.toLocaleString('es-ES')}% de dispositivos` : 'Aún sin telemetría', deltaType: 'neutral', category: 'technical' },
   ];
+  const stats: StatMetric[] = rawStats.map(({ sourceKey, ...metric }) =>
+    sourceKey && isUnavailable(sourceKey)
+      ? { ...metric, value: UNAVAILABLE_VALUE, delta: unavailableDetail(sourceKey), deltaType: 'neutral' }
+      : metric
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
@@ -123,7 +132,7 @@ export const OverviewTab: React.FC = () => {
       </section>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(360px, 100%), 1fr))', gap: '18px' }}>
-        <ChartCard title="Evolución de usuarios activos">
+        <ChartCard title="Evolución de personas activas">
           {dashboard.activeUsers.length === 0 ? <EmptyChart /> : (
             <div style={{ width: '100%', height: '220px' }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -137,7 +146,7 @@ export const OverviewTab: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-divider)" vertical={false} />
                   <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#645c50' }} />
                   <YAxis tick={{ fontSize: 11, fill: '#645c50' }} allowDecimals={false} />
-                  <Tooltip formatter={(value: number) => [numberFormatter.format(value), 'Usuarios activos']} />
+                  <Tooltip formatter={(value: number) => [numberFormatter.format(value), 'Personas activas']} />
                   <Area type="monotone" dataKey="users" stroke="var(--color-accent)" strokeWidth={3} fill="url(#colorUsers)" />
                 </AreaChart>
               </ResponsiveContainer>
@@ -146,7 +155,7 @@ export const OverviewTab: React.FC = () => {
         </ChartCard>
 
         <ChartCard title="Formatos más utilizados">
-          {dashboard.formatUsage.length === 0 ? <EmptyChart /> : (
+          {dashboard.formatUsage.length === 0 ? <EmptyChart unavailableKey={isUnavailable('formatUsage') ? 'formatUsage' : undefined} /> : (
             <div style={{ width: '100%', height: '220px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={dashboard.formatUsage} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
@@ -179,8 +188,8 @@ export const OverviewTab: React.FC = () => {
           )}
         </ChartCard>
 
-        <ChartCard title="Conversión: registro → primera lectura → pago">
-          {dashboard.funnel.length === 0 ? <EmptyChart /> : (
+        <ChartCard title="Embudo: actividad → importación → lectura → compra">
+          {dashboard.funnel.length === 0 ? <EmptyChart unavailableKey={isUnavailable('funnel') ? 'funnel' : undefined} /> : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingTop: '8px' }}>
               {dashboard.funnel.map((step) => (
                 <div key={step.stage}>
@@ -198,7 +207,7 @@ export const OverviewTab: React.FC = () => {
         </ChartCard>
 
         <ChartCard title="Planes de Lectoria">
-          {dashboard.planDistribution.length === 0 ? <EmptyChart /> : (
+          {dashboard.planDistribution.length === 0 ? <EmptyChart unavailableKey={isUnavailable('planDistribution') ? 'planDistribution' : undefined} /> : (
             <div style={{ width: '100%', height: '220px', display: 'flex', alignItems: 'center' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>

@@ -4,7 +4,7 @@
 
 - La web pública presenta Lectoria; el lector vive en las apps móviles.
 - `/admin` es exclusivamente para administradores y muestra métricas agregadas de uso de iOS y Android.
-- Los planes canónicos son `free` (USD 0), `annual` (USD 5/año) y `lifetime` (USD 20, pago único). No crear planes “Estudiante”, “Premium” o “Pro”.
+- Los planes canónicos (iguales en iOS, Android y web desde 2026-11-22) son `free` (USD 0), `semiannual` (USD 4,99 cada 6 meses), `annual` (USD 7,99/año, recomendado) y `lifetime` (USD 19,99, pago único). Semestral y anual incluyen 7 días de prueba. Fuente única en `src/config/plans.ts`. No crear planes “Estudiante”, “Premium” o “Pro”.
 
 ## Autenticación y autorización
 
@@ -17,7 +17,8 @@
 
 ## Analítica y privacidad
 
-- El dashboard consume `admin_dashboard_summary(range_days)`; no debe usar cifras simuladas como reemplazo silencioso.
+- El dashboard consume `admin_dashboard_summary(range_days)` (v2: `supabase/migrations/20261122000000_admin_dashboard_summary_v2.sql`); no debe usar cifras simuladas como reemplazo silencioso.
+- Las métricas listadas en `unavailableMetrics` se muestran como «Sin fuente», nunca como 0.
 - Las apps móviles registran telemetría mediante `ingest_analytics_event`.
 - Nunca registrar contenido o nombre de documentos, texto seleccionado, notas, resaltados, búsquedas, prompts/respuestas de IA, correos, tokens o códigos OTP.
 - Compras y cancelaciones se escriben desde validación de servidor/App Store/Play Store, no desde el cliente móvil.

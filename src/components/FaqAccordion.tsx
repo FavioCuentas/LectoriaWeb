@@ -10,8 +10,9 @@ export const FaqAccordion: React.FC = () => {
     { q: '¿Cómo funciona la inteligencia artificial?', a: 'La IA de Lectoria te ayuda a definir, traducir, resumir y explicar fragmentos de tu lectura, siempre como apoyo — tú decides qué aprender.' },
     { q: '¿Puedo leer documentos en otros idiomas?', a: 'Sí, puedes importar documentos en distintos idiomas y usar la traducción contextual mientras lees.' },
     { q: '¿Lectoria funciona en iPad?', a: 'Actualmente la app está optimizada principalmente para iPhone (iOS), con compatibilidad para ejecutar la versión en iPadOS.' },
-    { q: '¿Existe una versión para Android?', a: 'El lanzamiento inicial está enfocado exclusivamente en iPhone. Puedes registrarte en nuestro boletín para enterarte cuando haya novedades para Android.' },
-    { q: '¿Puedo cancelar mi suscripción?', a: 'Sí, puedes cancelar tu suscripción cuando quieras desde los ajustes de tu cuenta de App Store sin penalizaciones.' },
+    { q: '¿Existe una versión para Android?', a: 'Sí. Lectoria también está disponible para Android a través de Google Play, con los mismos planes y precios que en iPhone.' },
+    { q: '¿Cómo funciona la prueba gratis?', a: 'Los planes Semestral y Anual incluyen 7 días gratis. Si cancelas antes de que terminen, no se te cobra nada. El plan De por vida es un pago único, sin prueba ni renovaciones.' },
+    { q: '¿Puedo cancelar mi suscripción?', a: 'Sí, puedes cancelar tu suscripción cuando quieras y sin penalizaciones: en iPhone desde los ajustes de tu cuenta de App Store y en Android desde Google Play.' },
     { q: '¿Cómo elimino mis documentos?', a: 'Puedes eliminar cualquier documento de tu biblioteca en cualquier momento deslizando o mediante el menú de opciones del archivo.' },
     { q: '¿Dónde puedo solicitar soporte?', a: 'Puedes escribirnos al correo oficial de soporte: soporte@lectoria.app.' }
   ];

@@ -29,7 +29,7 @@ Una sesión de usuario sin ese rol no puede renderizar `/admin`. Las funciones y
 
 ## Datos del dashboard
 
-El frontend no contiene KPIs ficticios. Consulta el RPC `admin_dashboard_summary` con rangos de 7, 30 o 90 días. La migración local propuesta está en `supabase/migrations` y documentada en `supabase/README.md`; no se aplica automáticamente.
+El frontend no contiene KPIs ficticios. Consulta el RPC `admin_dashboard_summary` con rangos de 7, 30 o 90 días. La versión vigente es `supabase/migrations/20261122000000_admin_dashboard_summary_v2.sql` (se aplica a mano en el SQL Editor; prueba local: `node supabase/tests/admin_dashboard_summary_v2.mjs <ruta a @electric-sql/pglite/dist/index.js>`). La migración local propuesta está en `supabase/migrations` y documentada en `supabase/README.md`; no se aplica automáticamente.
 
 Las apps móviles deben enviar eventos operativos idempotentes a `ingest_analytics_event`. El contenido privado de lectura nunca forma parte de la telemetría.
 
@@ -37,9 +37,12 @@ Planes canónicos:
 
 | Código | Nombre | Precio |
 | --- | --- | --- |
-| `free` | Free | USD 0 |
-| `annual` | Anual | USD 5/año |
-| `lifetime` | De por vida | USD 20, pago único |
+| `free` | Gratis | USD 0 |
+| `semiannual` | Semestral | USD 4,99 cada 6 meses (7 días de prueba) |
+| `annual` | Anual (recomendado) | USD 7,99/año (7 días de prueba) |
+| `lifetime` | De por vida | USD 19,99, pago único |
+
+IDs de tienda: iOS `com.lectoria.premium.semiannual` / `.yearly` / `.lifetime`; Android `premium_semiannual` / `premium_annual` / `premium_lifetime`.
 
 ## Verificación
 

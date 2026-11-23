@@ -1,11 +1,33 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AdminDashboardData, DateRange } from '../types/dashboard';
 import { supabase } from './supabase';
+import { PLAN_CODES } from '../config/plans';
 
 export const DATE_RANGE_DAYS: Record<DateRange, number> = {
   '7d': 7,
   '30d': 30,
   '90d': 90,
+};
+
+/**
+ * Completa los campos añadidos en la v2 del RPC (semiannualUsers, unavailableMetrics)
+ * para que el panel siga funcionando si la web se publica antes de aplicar la migración.
+ */
+const withV2Defaults = (value: unknown): unknown => {
+  if (!value || typeof value !== 'object') return value;
+  const candidate = value as Record<string, unknown>;
+  const kpis = candidate.kpis;
+  const isV1 = !Array.isArray(candidate.unavailableMetrics);
+  return {
+    ...candidate,
+    kpis: kpis && typeof kpis === 'object' ? { semiannualUsers: 0, ...(kpis as object) } : kpis,
+    unavailableMetrics: isV1
+      ? // La v1 devolvía siempre 0 en finanzas e importaciones por falta de fuente.
+        ['freeUsers', 'semiannualUsers', 'annualUsers', 'lifetimeUsers', 'payingUsers', 'paymentConversionPct',
+          'cancellations', 'grossRevenueCents', 'planDistribution', 'documentsImported', 'avgReadingMinutes',
+          'technicalErrors', 'formatUsage', 'funnel']
+      : candidate.unavailableMetrics,
+  };
 };
 
 const isDashboardData = (value: unknown): value is AdminDashboardData => {
@@ -20,6 +42,7 @@ const isDashboardData = (value: unknown): value is AdminDashboardData => {
     'monthlyActiveUsers',
     'newUsers',
     'freeUsers',
+    'semiannualUsers',
     'annualUsers',
     'lifetimeUsers',
     'payingUsers',
@@ -66,8 +89,10 @@ const isDashboardData = (value: unknown): value is AdminDashboardData => {
     ) &&
     Array.isArray(candidate.planDistribution) &&
     candidate.planDistribution.every(
-      (item) => ['free', 'annual', 'lifetime'].includes(item.plan) && isNumber(item.count) && isNumber(item.pct)
-    )
+      (item) => PLAN_CODES.includes(item.plan) && isNumber(item.count) && isNumber(item.pct)
+    ) &&
+    Array.isArray(candidate.unavailableMetrics) &&
+    candidate.unavailableMetrics.every((item) => typeof item === 'string')
   );
 };
 
@@ -91,9 +116,10 @@ export const fetchAdminDashboard = async (
     throw new Error('No se pudieron cargar las métricas de Supabase. Inténtalo nuevamente.');
   }
 
-  if (!isDashboardData(data)) {
+  const normalized = withV2Defaults(data);
+  if (!isDashboardData(normalized)) {
     throw new Error('Supabase devolvió un formato de métricas incompatible con esta versión del dashboard.');
   }
 
-  return data;
+  return normalized;
 };

@@ -21,6 +21,7 @@ La nueva función podrá aceptar enteros de 1 a 365 sin cambiar el selector actu
     newUsers: number;
     freeUsers: number;
     annualUsers: number;
+    semiannualUsers: number;   // v2
     lifetimeUsers: number;
     payingUsers: number;
     paymentConversionPct: number;
@@ -48,10 +49,11 @@ La nueva función podrá aceptar enteros de 1 a 365 sin cambiar el selector actu
     pct: number;
   }[];
   planDistribution: {
-    plan: 'free' | 'annual' | 'lifetime';
+    plan: 'free' | 'semiannual' | 'annual' | 'lifetime';
     count: number;
     pct: number;
   }[];
+  unavailableMetrics: string[]; // v2: claves sin fuente confirmada
 }
 ```
 
@@ -141,3 +143,32 @@ usa timezone('utc', now()). La prueba local reproduce estas restricciones;
 la migración no las modifica. Esta confirmación no aporta la clave JSON de
 duración, los eventos de importación/error ni el mapeo de plataforma, que
 continúan pendientes según lo documentado arriba.
+
+
+## v2 (2026-11-22): `20261122000000_admin_dashboard_summary_v2.sql`
+
+Reemplaza la función anterior (solo el RPC, permisos y comentario). Se confirmó el
+mapeo leyendo el cliente iOS (`SupabaseAnalyticsService`, `ImportService`,
+`ReadingSessionCoordinator`, `PaywallView`), que inserta en `analytics_events`:
+
+| Métrica | Fuente |
+| --- | --- |
+| Personas activas (DAU/WAU/MAU, serie diaria, embudo) | `user_id` si existe; si no, `installation_id`. Las apps funcionan sin cuenta, así que contar solo `user_id` dejaba fuera a casi todos. |
+| `documentsImported`, `formatUsage` | `document_imported`, `properties.format` (`epub`, `pdf`, `txt`, `markdown`, `pasted_text`, `pptx`). |
+| `avgReadingMinutes` | `reading_session_ended`, `properties.duration_seconds` (texto numérico; los valores no numéricos se ignoran). |
+| `technicalErrors` | `error_occurred` + `document_import_failed`. |
+| `platformVersions.platform` | iOS: `device_family` `iPhone`/`iPad` u `os_version` iOS. Android: `device_family` u `os_version` que empiece con `Android` (convención para el cliente Android). |
+| `funnel` | Personas activas → importaron → terminaron una lectura → vieron planes → compra reportada por la app. |
+
+Siguen sin fuente validada por servidor (nadie escribe `subscription_entitlements`
+ni `purchase_transactions`): planes, usuarios de pago, conversión, ingresos,
+cancelaciones y `planDistribution`. Se devuelven en 0/[] y se listan en
+`unavailableMetrics`; el panel los muestra como «Sin fuente». `purchase_completed`
+solo aparece en el embudo como «compra reportada por la app», nunca como ingreso.
+
+Compatibilidad: si la web se publica antes de aplicar la v2, el frontend acepta la
+respuesta v1 (`semiannualUsers` = 0 y marca como «Sin fuente» lo que la v1 no medía).
+
+Prueba local: `node supabase/tests/admin_dashboard_summary_v2.mjs <ruta a pglite>`
+(aplica la v1, luego la v2 dos veces, y verifica permisos, rangos, invitados,
+formatos, minutos, errores, plataformas, embudo y privacidad).

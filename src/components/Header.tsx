@@ -44,9 +44,7 @@ export const Header: React.FC = () => {
             <a className="lect-link" href="#faq" style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>Preguntas frecuentes</a>
           </nav>
           <a
-            href="https://apps.apple.com"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#cta-final"
             className="btn btn-primary"
             style={{
               padding: '8px 18px',
@@ -59,7 +57,7 @@ export const Header: React.FC = () => {
               boxShadow: 'var(--shadow-sm)'
             }}
           >
-            Próximamente en App Store
+            Próximamente
           </a>
         </div>
       </div>
@@ -72,9 +70,7 @@ export const Header: React.FC = () => {
           <a className="lect-link" href="#precios" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '15px' }}>Precios</a>
           <a className="lect-link" href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '15px' }}>Preguntas frecuentes</a>
           <a
-            href="https://apps.apple.com"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#cta-final"
             className="btn btn-primary"
             onClick={() => setMobileMenuOpen(false)}
             style={{
@@ -88,7 +84,7 @@ export const Header: React.FC = () => {
               marginTop: '6px'
             }}
           >
-            Próximamente en App Store
+            Próximamente
           </a>
         </nav>
       )}

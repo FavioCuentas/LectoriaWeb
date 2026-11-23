@@ -1,5 +1,5 @@
 import React from 'react';
-import { PRODUCT_PLANS } from '../config/plans';
+import { PRODUCT_PLANS, TRIAL_DAYS } from '../config/plans';
 
 export const PricingSection: React.FC = () => {
   return (
@@ -9,21 +9,25 @@ export const PricingSection: React.FC = () => {
           <span className="tag tag-accent-2">Precios</span>
           <h2 style={{ fontSize: 'clamp(26px, 3.2vw, 36px)', margin: '14px 0 0' }}>Simple, accesible y sin precios ocultos.</h2>
           <p style={{ marginTop: '10px', color: 'var(--color-neutral-700)' }}>
-            Elige Free, USD 5 por año o USD 20 en un único pago de por vida.
+            Empieza gratis. Las suscripciones semestral y anual incluyen {TRIAL_DAYS} días de prueba y puedes cancelarlas cuando quieras.
           </p>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '20px' }}>
         {PRODUCT_PLANS.map((plan) => (
           <div key={plan.code} className="card elev-md" style={{ padding: '28px', gap: '16px', border: plan.featured ? '2px solid var(--color-accent)' : 'none' }}>
             <div>
+              {plan.featured && <span className="tag tag-accent" style={{ marginBottom: '8px' }}>Recomendado</span>}
               <div className="card-title" style={{ fontSize: '20px' }}>{plan.name}</div>
               <p className="card-body" style={{ marginTop: '4px' }}>{plan.description}</p>
             </div>
             <div>
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: '30px' }}>{plan.priceLabel}</div>
               <div style={{ fontSize: '12.5px', color: 'var(--color-neutral-700)' }}>{plan.cadenceLabel}</div>
+              {plan.trialLabel && (
+                <div style={{ fontSize: '12.5px', marginTop: '4px', color: 'var(--color-accent-2-700)', fontWeight: 600 }}>{plan.trialLabel}</div>
+              )}
             </div>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
               {plan.features.map((pf, fIdx) => (

@@ -4,7 +4,7 @@ Esta carpeta contiene la base local propuesta para que las apps iOS/Android regi
 
 ## Antes de aplicar la migración
 
-1. Revisa los nombres de productos de App Store y Play Store y conserva los códigos internos `free`, `annual` y `lifetime`.
+1. Revisa los nombres de productos de App Store y Play Store y conserva los códigos internos `free`, `semiannual`, `annual` y `lifetime`.
 2. Configura la plantilla de correo de Supabase con `{{ .Token }}`. Si la plantilla utiliza `{{ .ConfirmationURL }}`, Supabase enviará Magic Link en lugar del código OTP de seis dígitos.
 3. Asigna `app_metadata.role = "admin"` únicamente desde un proceso de servidor o desde el panel seguro de Supabase. `user_metadata` nunca debe autorizar el acceso administrativo.
 4. Aplica la migración primero en un proyecto de desarrollo y prueba las políticas con un usuario normal y un administrador.
