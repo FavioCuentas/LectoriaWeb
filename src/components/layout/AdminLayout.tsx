@@ -54,7 +54,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ analyticsClient }) => 
       ['Uso de diccionario', k.dictionaryUses],
       ['Uso de traducción', k.translationUses],
       ['Uso de IA', k.aiUses],
-      ['Uso de texto a voz', k.textToSpeechUses],
       ['Errores técnicos', k.technicalErrors, 'technicalErrors'],
       ['Versión más utilizada', k.topAppVersion ?? 'Sin datos'],
     ];

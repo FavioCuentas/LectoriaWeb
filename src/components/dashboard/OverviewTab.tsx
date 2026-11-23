@@ -99,7 +99,6 @@ export const OverviewTab: React.FC = () => {
     { id: 'dictionary', sourceKey: 'dictionaryUses', label: 'Uso de diccionario', value: numberFormatter.format(kpis.dictionaryUses), delta: period, deltaType: 'neutral', category: 'usage' },
     { id: 'translation', sourceKey: 'translationUses', label: 'Uso de traducción', value: numberFormatter.format(kpis.translationUses), delta: period, deltaType: 'neutral', category: 'usage' },
     { id: 'ai', sourceKey: 'aiUses', label: 'Uso de IA', value: numberFormatter.format(kpis.aiUses), delta: period, deltaType: 'neutral', category: 'usage' },
-    { id: 'tts', sourceKey: 'textToSpeechUses', label: 'Uso de texto a voz', value: numberFormatter.format(kpis.textToSpeechUses), delta: period, deltaType: 'neutral', category: 'usage' },
     { id: 'errors', sourceKey: 'technicalErrors', label: 'Errores técnicos', value: numberFormatter.format(kpis.technicalErrors), delta: period, deltaType: 'negative', category: 'technical' },
     { id: 'version', label: 'Versión más utilizada', value: kpis.topAppVersion ?? 'Sin datos', delta: kpis.topAppVersion ? `${kpis.topAppVersionPct.toLocaleString('es-ES')}% de dispositivos` : 'Aún sin telemetría', deltaType: 'neutral', category: 'technical' },
   ];

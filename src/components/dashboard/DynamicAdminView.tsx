@@ -144,7 +144,6 @@ export const DynamicAdminView: React.FC = () => {
         <CardGrid>
           <Card title="Sesiones de lectura" value={numberFormatter.format(kpis.readingSessions)} detail={period} />
           <AvailabilityCard unavailableMetrics={dashboard.unavailableMetrics} title="Duración promedio" metric="avgReadingMinutes" value={`${kpis.avgReadingMinutes.toLocaleString('es-ES')} min`} detail="Solo sesiones finalizadas" />
-          <Card title="Uso de texto a voz" value={numberFormatter.format(kpis.textToSpeechUses)} detail={period} />
         </CardGrid>
       </section>
     );
@@ -157,7 +156,6 @@ export const DynamicAdminView: React.FC = () => {
         <CardGrid>
           <Card title="Diccionario" value={numberFormatter.format(kpis.dictionaryUses)} detail={period} />
           <Card title="Traducción" value={numberFormatter.format(kpis.translationUses)} detail={period} />
-          <Card title="Texto a voz" value={numberFormatter.format(kpis.textToSpeechUses)} detail={period} />
         </CardGrid>
         <DataTable headers={['Función', 'Usos', 'Participación']} rows={dashboard.featureUsage.map((item) => [item.name, numberFormatter.format(item.count), `${item.pct.toLocaleString('es-ES')}%`])} />
       </section>
