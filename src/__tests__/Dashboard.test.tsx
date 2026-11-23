@@ -35,7 +35,7 @@ describe('Dashboard administrativo', () => {
     renderDashboard();
 
     expect(await screen.findByText('Administrador Lectoria')).toBeInTheDocument();
-    expect(screen.getByText(/Datos reales de Supabase/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Datos reales de Supabase/i)).not.toBeInTheDocument();
     expect(screen.getByText('Plan Gratis')).toBeInTheDocument();
     expect(screen.getByText('Plan Semestral')).toBeInTheDocument();
     expect(screen.getByText('Plan Anual')).toBeInTheDocument();
@@ -48,7 +48,7 @@ describe('Dashboard administrativo', () => {
 
   it('consulta nuevamente el RPC al cambiar a siete días', async () => {
     const mock = renderDashboard();
-    await screen.findByText(/Datos reales de Supabase/i);
+    await screen.findByText('Usuarios registrados');
 
     fireEvent.click(screen.getByRole('button', { name: '7 días' }));
 
@@ -73,7 +73,7 @@ describe('Dashboard administrativo', () => {
 
   it('muestra «Sin fuente» en lugar de un 0 cuando la métrica no tiene datos reales', async () => {
     renderDashboard({ unavailableMetrics: ['grossRevenueCents', 'semiannualUsers'] });
-    await screen.findByText(/Datos reales de Supabase/i);
+    await screen.findByText('Usuarios registrados');
 
     expect(screen.getAllByText('Sin fuente')).toHaveLength(2);
     expect(screen.getAllByText('Pendiente: validar compras en servidor')).toHaveLength(2);

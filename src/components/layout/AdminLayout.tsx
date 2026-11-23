@@ -89,7 +89,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ analyticsClient }) => 
     ? 'Actualizando datos…'
     : error
       ? 'Sin conexión a métricas'
-      : 'Datos reales de Supabase';
+      : null;
 
   return (
     <div className="admin-shell">
@@ -133,7 +133,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ analyticsClient }) => 
         <header className="admin-header">
           <div>
             <h1>{activeNavItem.label}</h1>
-            <span className={`admin-data-status${error ? ' error' : ''}`}>{statusLabel}</span>
+            {statusLabel && (
+              <span className={`admin-data-status${error ? ' error' : ''}`}>{statusLabel}</span>
+            )}
           </div>
 
           <div className="admin-toolbar">
