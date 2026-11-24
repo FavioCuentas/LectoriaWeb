@@ -34,31 +34,19 @@ export const Hero: React.FC = () => {
 
       <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
         <div aria-hidden="true" style={{ position: 'absolute', width: '340px', height: '340px', borderRadius: '50%', background: 'var(--color-accent-2-200)', top: '-30px', right: '10%', zIndex: 0, filter: 'blur(2px)' }} />
-        <div style={{ position: 'relative', zIndex: 1, width: 'min(280px, 72vw)', borderRadius: '44px', background: 'var(--color-neutral-900)', padding: '12px', boxShadow: 'var(--shadow-lg)' }}>
-          <div style={{ borderRadius: '34px', overflow: 'hidden', background: 'var(--color-bg)', aspectRatio: '9/19.5', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '26px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', zIndex: 2 }}>
-              <div style={{ width: '80px', height: '18px', background: 'var(--color-neutral-900)', borderRadius: '0 0 14px 14px' }} />
-            </div>
-            <div style={{ padding: '34px 14px 14px', display: 'flex', flexDirection: 'column', gap: '10px', height: '100%' }}>
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: '13px' }}>Mi biblioteca</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <div style={{ background: 'var(--color-accent-200)', borderRadius: '10px', aspectRatio: '3/4' }} />
-                <div style={{ background: 'var(--color-accent-2-200)', borderRadius: '10px', aspectRatio: '3/4' }} />
-              </div>
-              <div style={{ marginTop: '6px', background: 'var(--color-surface)', borderRadius: '14px', padding: '10px', flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div style={{ fontSize: '9px', lineHeight: 1.5, color: 'color-mix(in srgb, var(--color-text) 65%, transparent)' }}>
-                  La <span style={{ background: 'var(--color-accent-300)', borderRadius: '3px', padding: '0 2px' }}>retención</span> es la capacidad de un sistema para conservar información con el paso del tiempo...
-                </div>
-                <div style={{ alignSelf: 'flex-start', background: 'var(--color-bg)', borderRadius: '10px', boxShadow: 'var(--shadow-md)', padding: '6px 8px', display: 'flex', gap: '6px', fontSize: '8px', color: 'var(--color-accent-700)' }}>
-                  <span>Definir</span><span>Traducir</span><span>Preguntar a Lectoria</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+        <img
+          src="/media/hero-estudiante.jpg"
+          alt="Estudiante tomando apuntes junto a su iPhone con las notas de Lectoria abiertas"
+          width={1122}
+          height={1402}
+          fetchPriority="high"
+          style={{ width: 'min(440px, 88vw)', height: 'auto', borderRadius: '32px', boxShadow: 'var(--shadow-lg)', display: 'block' }}
+        />
 
-        <div style={{ position: 'absolute', zIndex: 2, bottom: '-6px', left: '-8px', width: '118px', height: '118px', borderRadius: '50%', overflow: 'hidden', boxShadow: 'var(--shadow-lg)', border: '4px solid var(--color-bg)', animation: 'lect-float 5s ease-in-out infinite' }}>
+        <div style={{ position: 'absolute', zIndex: 2, bottom: '-18px', left: '-22px', width: '118px', height: '118px', borderRadius: '50%', overflow: 'hidden', boxShadow: 'var(--shadow-lg)', border: '4px solid var(--color-bg)', animation: 'lect-float 5s ease-in-out infinite' }}>
           <video ref={videoRef} src="/assets/lectoria-mascota-loop.mp4" poster="/assets/lectoria-mascota-3d.png" autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
         </div>
       </div>
     </section>

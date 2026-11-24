@@ -14,6 +14,7 @@ import { Hero } from './components/Hero';
 import { TrustBar } from './components/TrustBar';
 import { ProblemSection } from './components/ProblemSection';
 import { SolutionSection } from './components/SolutionSection';
+import { DevicesShowcase } from './components/DevicesShowcase';
 import { FormatosSection } from './components/FormatosSection';
 import { ReaderExperience } from './components/ReaderExperience';
 import { ContextualTools } from './components/ContextualTools';
@@ -37,6 +38,7 @@ const LandingPage: React.FC = () => {
         <TrustBar />
         <ProblemSection />
         <SolutionSection />
+        <DevicesShowcase />
         <FormatosSection />
         <ReaderExperience />
         <ContextualTools />
