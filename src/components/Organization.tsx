@@ -1,4 +1,5 @@
 import React from 'react';
+import { DeviceStage, IPhoneFrame } from './DeviceFrames';
 
 export const Organization: React.FC = () => {
   const items = [
@@ -85,10 +86,11 @@ export const Organization: React.FC = () => {
   ];
 
   return (
-    <section style={{ padding: 'clamp(48px, 6vw, 80px) 0', borderTop: '1px solid var(--color-divider)' }}>
+    <section style={{ padding: 'clamp(48px, 6vw, 80px) 0', borderTop: '1px solid var(--color-divider)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'clamp(32px, 5vw, 64px)', alignItems: 'center' }}>
+      <div>
       <span className="tag tag-accent-2">Organización</span>
       <h2 style={{ fontSize: 'clamp(26px, 3.2vw, 36px)', margin: '14px 0 26px', maxWidth: '22ch' }}>Todo lo importante permanece conectado con tu lectura.</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
         {items.map((o, idx) => (
           <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px', background: 'var(--color-surface)', borderRadius: 'var(--radius-md)' }}>
             <div style={{ color: 'var(--color-accent-700)' }}>{o.icon}</div>
@@ -96,6 +98,10 @@ export const Organization: React.FC = () => {
           </div>
         ))}
       </div>
+      </div>
+      <DeviceStage glow="var(--color-accent-200)">
+        <IPhoneFrame src="/media/iphone-notas.jpg" alt="Notas y resaltados de Lectoria en iPhone, con etiquetas como Evidencia e Idea principal" />
+      </DeviceStage>
     </section>
   );
 };

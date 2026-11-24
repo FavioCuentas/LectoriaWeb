@@ -1,10 +1,12 @@
 import React from 'react';
+import { DeviceStage, IPhoneFrame } from './DeviceFrames';
 
 export const ContextualTools: React.FC = () => {
   const menuItems = ['Definir', 'Traducir', 'Preguntar a Lectoria', 'Resumir', 'Explicar', 'Guardar como nota', 'Resaltar'];
 
   return (
-    <section style={{ padding: 'clamp(48px, 6vw, 80px) 0', borderTop: '1px solid var(--color-divider)' }}>
+    <section style={{ padding: 'clamp(48px, 6vw, 80px) 0', borderTop: '1px solid var(--color-divider)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'clamp(32px, 5vw, 64px)', alignItems: 'center' }}>
+      <div>
       <span className="tag tag-accent-2">Herramientas contextuales</span>
       <h2 style={{ fontSize: 'clamp(26px, 3.2vw, 36px)', margin: '14px 0 26px', maxWidth: '24ch' }}>Selecciona una palabra. Lectoria se encarga del resto.</h2>
       
@@ -28,6 +30,10 @@ export const ContextualTools: React.FC = () => {
           personal directa.
         </p>
       </div>
+      </div>
+      <DeviceStage glow="var(--color-accent-200)">
+        <IPhoneFrame src="/media/iphone-lector.jpg" alt="Lector de Lectoria en iPhone con resaltados de colores y la barra con Diccionario, Traducir e IA" />
+      </DeviceStage>
     </section>
   );
 };

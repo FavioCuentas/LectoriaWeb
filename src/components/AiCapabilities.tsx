@@ -1,4 +1,5 @@
 import React from 'react';
+import { DeviceStage, IPhoneFrame } from './DeviceFrames';
 
 export const AiCapabilities: React.FC = () => {
   const capabilities = [
@@ -13,7 +14,7 @@ export const AiCapabilities: React.FC = () => {
   ];
 
   return (
-    <section style={{ padding: 'clamp(48px, 6vw, 80px) 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 'clamp(32px, 5vw, 64px)', alignItems: 'start' }}>
+    <section style={{ padding: 'clamp(48px, 6vw, 80px) 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 'clamp(32px, 5vw, 64px)', alignItems: 'center' }}>
       <div>
         <span className="tag tag-accent">Inteligencia artificial</span>
         <h2 style={{ fontSize: 'clamp(26px, 3.2vw, 36px)', margin: '14px 0 18px', maxWidth: '20ch' }}>Comprende lo complejo sin abandonar tu lectura.</h2>
@@ -27,16 +28,19 @@ export const AiCapabilities: React.FC = () => {
             </div>
           ))}
         </div>
+        <div className="card elev-sm" style={{ marginTop: '28px', padding: '26px', background: 'var(--color-accent-2-100)' }}>
+          <p style={{ fontFamily: 'var(--font-heading)', fontSize: '20px', lineHeight: 1.4, margin: 0, color: 'var(--color-accent-2-800)' }}>
+            Lectoria te ayuda a comprender. Tú decides qué aprender y cómo utilizarlo.
+          </p>
+          <p style={{ fontSize: '13px', margin: '14px 0 0', color: 'var(--color-accent-2-700)' }}>
+            La IA es una herramienta de apoyo, no un sustituto del aprendizaje.
+          </p>
+        </div>
       </div>
 
-      <div className="card elev-sm" style={{ padding: '26px', background: 'var(--color-accent-2-100)' }}>
-        <p style={{ fontFamily: 'var(--font-heading)', fontSize: '20px', lineHeight: 1.4, margin: 0, color: 'var(--color-accent-2-800)' }}>
-          Lectoria te ayuda a comprender. Tú decides qué aprender y cómo utilizarlo.
-        </p>
-        <p style={{ fontSize: '13px', margin: '14px 0 0', color: 'var(--color-accent-2-700)' }}>
-          La IA es una herramienta de apoyo, no un sustituto del aprendizaje.
-        </p>
-      </div>
+      <DeviceStage>
+        <IPhoneFrame src="/media/iphone-ia.jpg" alt="La IA de Lectoria generando preguntas de estudio sobre un fragmento seleccionado" />
+      </DeviceStage>
     </section>
   );
 };
